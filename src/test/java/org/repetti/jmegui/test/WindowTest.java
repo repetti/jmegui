@@ -3,12 +3,14 @@ package org.repetti.jmegui.test;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.Vector2f;
+import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.windows.Window;
 import tonegod.gui.core.Screen;
-import tonegod.gui.controls.buttons.ButtonAdapter;
 
 /**
  * Created by repetti on 11/04/15.
+ *
+ * Not an classic "test" but an example demonstrating how to create basic GUI objects.
  */
 public class WindowTest extends SimpleApplication {
 
@@ -20,36 +22,30 @@ public class WindowTest extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
+        //Mouse should be visible
         flyCam.setEnabled(false);
 
-        // this = any JME Application
-        final Screen myScreen = new Screen(this); //, "tonegod/gui/style/def/style_map.xml"
+        // You can defil\ne your own style map here
+        final Screen myScreen = new Screen(this);
         guiNode.addControl(myScreen);
 
-        Window win = new Window(myScreen, "win", new Vector2f(15, 15));
-        myScreen.addElement(win);
+        Window window = new Window(myScreen, "Main window", new Vector2f(15, 15));
+        myScreen.addElement(window);
 
-        // create button and add to window
-        ButtonAdapter makeWindow = new ButtonAdapter( myScreen, "Btn1", new Vector2f(15, 55) ) {
+        ButtonAdapter newWindowButton = new ButtonAdapter(myScreen, "Button1", new Vector2f(15, 55)) {
+            private int winCount = 0;
+
             @Override
             public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
 
-                createNewWindow(myScreen, "New Window " + winCount);
+                Window newWindow = new Window(myScreen, "Window" + winCount,
+                        new Vector2f((myScreen.getWidth() / 2) - 175, (myScreen.getHeight() / 2) - 100)
+                );
+                newWindow.setWindowTitle("New Window " + winCount);
+                myScreen.addElement(newWindow);
+                winCount++;
             }
         };
-
-        // Add it to our initial window
-        win.addChild(makeWindow);
-    }
-
-    private int winCount = 0;
-
-    public final void createNewWindow(Screen screen, String windowTitle) {
-        Window nWin = new Window(screen, "Window" + winCount,
-            new Vector2f( (screen.getWidth()/2)-175, (screen.getHeight()/2)-100 )
-        );
-        nWin.setWindowTitle(windowTitle);
-        screen.addElement(nWin);
-        winCount++;
+        window.addChild(newWindowButton);
     }
 }
