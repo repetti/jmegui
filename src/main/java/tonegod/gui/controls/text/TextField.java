@@ -21,12 +21,9 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.Screen;
-import tonegod.gui.style.StyleManager.CursorType;
 import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
@@ -34,6 +31,10 @@ import tonegod.gui.listeners.KeyboardListener;
 import tonegod.gui.listeners.MouseButtonListener;
 import tonegod.gui.listeners.MouseFocusListener;
 import tonegod.gui.listeners.TabFocusListener;
+import tonegod.gui.style.StyleManager.CursorType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -42,17 +43,15 @@ import tonegod.gui.listeners.TabFocusListener;
  */
 public class TextField extends Element implements Control, KeyboardListener, TabFocusListener, MouseFocusListener, MouseButtonListener {
 
-	public static enum Type {
-		DEFAULT,
-		ALPHA,
-		ALPHA_NOSPACE,
-		NUMERIC,
-		ALPHANUMERIC,
-		ALPHANUMERIC_NOSPACE,
-		EXCLUDE_SPECIAL,
-		EXCLUDE_CUSTOM,
-		INCLUDE_CUSTOM
-	};
+	protected int caretIndex = 0, head = 0, tail = 0;
+	;
+	protected int rangeHead = -1, rangeTail = -1;
+	protected int visibleHead = -1, visibleTail = -1;
+	protected List<String> textFieldText = new ArrayList();
+	protected String finalText = "", visibleText = "", textRangeText = "";
+	protected BitmapText widthTest;
+	protected float caretX = 0;
+	protected boolean ctrl = false, shift = false, alt = false, meta = false;
 	private String validateAlpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
 	private String validateAlphaNoSpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private String validateNumeric = "0123456789.-";
@@ -61,16 +60,8 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	private String testString = "Gg|/X";
 	private Element caret;
 	private Material caretMat;
-	protected int caretIndex = 0, head = 0, tail = 0;
-	protected int rangeHead = -1, rangeTail = -1;
-	protected int visibleHead = -1, visibleTail = -1;
-	protected List<String> textFieldText = new ArrayList();
-	protected String finalText = "", visibleText = "", textRangeText = "";
-	protected BitmapText widthTest;
 	private boolean hasTabFocus = false;
-	protected float caretX = 0;
 	private Type type = Type.DEFAULT;
-	protected boolean ctrl = false, shift = false, alt = false, meta = false;
 	private boolean isEnabled = true;
 	private boolean forceUpperCase = false, forceLowerCase = false;
 	private int maxLength = 0;
@@ -82,10 +73,9 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	private boolean doubleClick = false, tripleClick = false;
 	private int clickCount = 0;
 	private boolean isPressed = false;
-	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 */
 	public TextField(ElementManager screen) {
@@ -98,7 +88,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 */
@@ -112,7 +102,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -126,7 +116,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -139,7 +129,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -154,7 +144,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -169,7 +159,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	
 	/**
 	 * Creates a new instance of the TextField control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -179,59 +169,61 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	 */
 	public TextField(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
 		super(screen, UID, position, dimensions, resizeBorders, defaultImg);
-		
+
 		this.setScaleEW(true);
 		this.setScaleNS(false);
 		this.setDocking(Docking.NW);
-		
+
 		compareClick = screen.getApplication().getTimer().getTimeInSeconds();
-		
+
 		float padding = screen.getStyle("TextField").getFloat("textPadding");
-		
+
 		this.setFontSize(screen.getStyle("TextField").getFloat("fontSize"));
 		this.setTextPadding(padding);
 		this.setTextWrap(LineWrapMode.valueOf(screen.getStyle("TextField").getString("textWrap")));
 		this.setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("TextField").getString("textAlign")));
 		this.setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("TextField").getString("textVAlign")));
-		
+
 		this.setMinDimensions(dimensions.clone());
-		
+
 		caret = new Element(screen, UID + ":Caret", new Vector2f(padding,padding), new Vector2f(dimensions.x-(padding*2), dimensions.y-(padding*2)), new Vector4f(0,0,0,0), null);
-		
+
 		caretMat = caret.getMaterial().clone();
 		caretMat.setBoolean("IsTextField", true);
 		caretMat.setTexture("ColorMap", null);
 		caretMat.setColor("Color", getFontColor());
-		
+
 		caret.setLocalMaterial(caretMat);
 		caret.setIgnoreMouse(true);
 		caret.setScaleEW(true);
 		caret.setScaleNS(false);
 		caret.setDocking(Docking.SW);
-		
+
 		setTextFieldFontColor(screen.getStyle("TextField").getColorRGBA("fontColor"));
 		this.addChild(caret);
-		
+
 		this.updateText("");
-		
+
 		populateEffects("TextField");
 	}
 
+	/**
+	 * Returns the current Type of the TextField
+	 *
+	 * @return Type
+	 */
+	public Type getType() {
+		return this.type;
+	}
+
 	// Validation
+
 	/**
 	 * Sets the TextField.Type of the text field.  This can be used to enfoce rules on the inputted text
 	 * @param type Type
 	 */
 	public void setType(Type type) {
 		this.type = type;
-	}
-	
-	/**
-	 * Returns the current Type of the TextField
-	 * @return Type
-	 */
-	public Type getType() {
-		return this.type;
 	}
 	
 	/**
@@ -245,7 +237,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	/**
 	 * Attempts to parse an int from the inputted text of the TextField
 	 * @return int
-	 * @throws NumberFormatException 
+	 * @throws NumberFormatException
 	 */
 	public int parseInt() throws NumberFormatException {
 		return Integer.parseInt(getText());
@@ -254,7 +246,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	/**
 	 * Attempts to parse a float from the inputted text of the TextField
 	 * @return float
-	 * @throws NumberFormatException 
+	 * @throws NumberFormatException
 	 */
 	public float parseFloat() throws NumberFormatException {
 		return Float.parseFloat(getText());
@@ -263,7 +255,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	/**
 	 * Attempts to parse a short from the inputted text of the TextField
 	 * @return short
-	 * @throws NumberFormatException 
+	 * @throws NumberFormatException
 	 */
 	public short parseShort() throws NumberFormatException {
 		return Short.parseShort(getText());
@@ -272,7 +264,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	/**
 	 * Attempts to parse a double from the inputted text of the TextField
 	 * @return double
-	 * @throws NumberFormatException 
+	 * @throws NumberFormatException
 	 */
 	public double parseDouble() throws NumberFormatException {
 		return Double.parseDouble(getText());
@@ -281,7 +273,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	/**
 	 * Attempts to parse a long from the inputted text of the TextField
 	 * @return long
-	 * @throws NumberFormatException 
+	 * @throws NumberFormatException
 	 */
 	public long parseLong() throws NumberFormatException {
 		return Long.parseLong(getText());
@@ -334,7 +326,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 						return;
 					}
 				}
-				
+
 				if ((Screen.isMac() && !alt) ||
 					(Screen.isWindows() && !ctrl) ||
 					(Screen.isUnix() && !ctrl) ||
@@ -352,7 +344,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				}
 				if (caretIndex < 0)
 					caretIndex = 0;
-				
+
 				if (!shift) setTextRangeStart(caretIndex);
 			}
 		} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
@@ -370,7 +362,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 						return;
 					}
 				}
-				
+
 				if ((Screen.isMac() && !alt) ||
 					(Screen.isWindows() && !ctrl) ||
 					(Screen.isUnix() && !ctrl) ||
@@ -393,7 +385,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				}
 				if (caretIndex > finalText.length())
 					caretIndex = finalText.length();
-				
+
 				if (!shift) {
 					if (caretIndex < textFieldText.size())	setTextRangeStart(caretIndex);
 					else									setTextRangeStart(textFieldText.size());
@@ -491,11 +483,11 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			}
 		}
 		this.updateText(getVisibleText());
-		
+
 		if (shift && (evt.getKeyCode() == KeyInput.KEY_LEFT || evt.getKeyCode() == KeyInput.KEY_RIGHT)) setTextRangeEnd(caretIndex);
-		
+
 		centerTextVertically();
-		
+
 		controlKeyPressHook(evt, getText());
 		evt.setConsumed();
 	}
@@ -544,25 +536,9 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	}
 	
 	@Override
-	public void setText(String s) {
-		caretIndex = 0;
-		
-		textFieldText.clear();
-		for (int i = 0; i < s.length(); i++) {
-			textFieldText.add(caretIndex, String.valueOf(s.charAt(i)));
-			caretIndex++;
-		}
-		this.updateText(getVisibleText());
-		
-		setCaretPositionToEnd();
-		
-		centerTextVertically();
-	}
-	
-	@Override
 	public final void setFontSize(float fontSize) {
 		this.fontSize = fontSize;
-		
+
 		if (textElement != null) {
 			textElement.setSize(fontSize);
 		}
@@ -578,6 +554,22 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		}
 		return ret;
 	}
+
+	@Override
+	public void setText(String s) {
+		caretIndex = 0;
+
+		textFieldText.clear();
+		for (int i = 0; i < s.length(); i++) {
+			textFieldText.add(caretIndex, String.valueOf(s.charAt(i)));
+			caretIndex++;
+		}
+		this.updateText(getVisibleText());
+
+		setCaretPositionToEnd();
+
+		centerTextVertically();
+	}
 	
 	/**
 	 * Returns the visible portion of the TextField's text
@@ -585,13 +577,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	 */
 	protected String getVisibleText() {
 		getTextFieldText();
-		
+
 		widthTest = new BitmapText(font, false);
 		widthTest.setBox(null);
 		widthTest.setSize(getFontSize());
 
 		int index1 = 0, index2;
-		
+
 		widthTest.setText(finalText);
 		if (head == -1 || tail == -1 || widthTest.getLineWidth() < getWidth()) {
 			head = 0;
@@ -664,7 +656,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 						if (widthTest.getLineWidth() < getWidth()-(getTextPadding()*2)) {
 							index2++;
 						}
-						
+
 					}
 				}
 			}
@@ -674,12 +666,12 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			else
 				visibleText = "";
 		}
-		
+
 		String testString = "";
 		widthTest.setText(".");
 		float fixWidth = widthTest.getLineWidth();
 		boolean useFix = false;
-		
+
 		if (!finalText.equals("")) {
 			try {
 				testString = finalText.substring(head, caretIndex);
@@ -696,7 +688,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 
 		caretX = nextCaretX;
 		setCaretPosition(getAbsoluteX()+caretX);
-		
+
 		return visibleText;
 	}
 	
@@ -704,7 +696,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		widthTest.setText(".");
 		float fixWidth = widthTest.getLineWidth();
 		boolean useFix = false;
-		
+
 		if (!finalText.equals("")) {
 			String testString = finalText.substring(head, caretIndex);
 
@@ -769,7 +761,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			widthTest.setText(".");
 			float fixWidth = widthTest.getLineWidth();
 			boolean useFix = false;
-			
+
 			widthTest.setSize(getFontSize());
 			widthTest.setText(visibleText.substring(0, index1));
 			while(caret.getAbsoluteX()+widthTest.getLineWidth() > (x+getTextPadding())) {
@@ -781,15 +773,16 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 					break;
 				}
 			}
-		
+
 			try {
 				testString = finalText.substring(head, caretIndex);
 				if (testString.charAt(testString.length()-1) == ' ') {
 					testString += ".";
 					useFix = true;
 				}
-			} catch (Exception ex) {  }
-		
+			} catch (Exception ex) {
+			}
+
 
 			widthTest.setText(testString);
 			float nextCaretX = widthTest.getLineWidth();
@@ -830,27 +823,19 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	}
 	
 	/**
-	 * Enables/disables the TextField
-	 * @param isEnabled boolean
-	 */
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
-	}
-	
-	/**
 	 * Returns if the TextField is currently enabled/disabled
 	 * @return boolean
 	 */
 	public boolean getIsEnabled() {
 		return this.isEnabled;
 	}
-	
+
 	/**
-	 * Enables/disables the use of the Copy text feature
-	 * @param copy boolean
+	 * Enables/disables the TextField
+	 * @param isEnabled boolean
 	 */
-	public void setAllowCopy(boolean copy) {
-		this.copy = copy;
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	/**
@@ -860,13 +845,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	public boolean getAllowCopy() {
 		return this.copy;
 	}
-	
+
 	/**
-	 * Eanbles/disables use of the Paste text feature
-	 * @param paste boolean
+	 * Enables/disables the use of the Copy text feature
+	 * @param copy boolean
 	 */
-	public void setAllowPaste(boolean paste) {
-		this.paste = paste;
+	public void setAllowCopy(boolean copy) {
+		this.copy = copy;
 	}
 	
 	/**
@@ -876,7 +861,16 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	public boolean getAllowPaste() {
 		return this.paste;
 	}
-	
+
+	/**
+	 * Eanbles/disables use of the Paste text feature
+	 *
+	 * @param paste boolean
+	 */
+	public void setAllowPaste(boolean paste) {
+		this.paste = paste;
+	}
+
 	/**
 	 * Enables/disables both the Copy and Paste feature
 	 * @param copyAndPaste boolean
@@ -885,7 +879,16 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		this.copy = copyAndPaste;
 		this.paste = copyAndPaste;
 	}
-	
+
+	/**
+	 * Returns if the TextField is set to force uppercase
+	 *
+	 * @return boolean
+	 */
+	public boolean getForceUpperCase() {
+		return this.forceUpperCase;
+	}
+
 	/**
 	 * Forces all text input to uppercase
 	 * @param forceUpperCase boolean
@@ -894,13 +897,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		this.forceUpperCase = forceUpperCase;
 		this.forceLowerCase = false;
 	}
-	
+
 	/**
-	 * Returns if the TextField is set to force uppercase
+	 * Returns if the TextField is set to force lowercase
 	 * @return boolean
 	 */
-	public boolean getForceUpperCase() {
-		return this.forceUpperCase;
+	public boolean getForceLowerCase() {
+		return this.forceLowerCase;
 	}
 	
 	/**
@@ -911,13 +914,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		this.forceLowerCase = forceLowerCase;
 		this.forceUpperCase = false;
 	}
-	
+
 	/**
-	 * Returns if the TextField is set to force lowercase
-	 * @return boolean
+	 * Returns the maximum limit of character allowed for this TextField
+	 * @return int
 	 */
-	public boolean getForceLowerCase() {
-		return this.forceLowerCase;
+	public int getMaxLength() {
+		return this.maxLength;
 	}
 	
 	/**
@@ -926,14 +929,6 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	 */
 	public void setMaxLength(int maxLength) {
 		this.maxLength = maxLength;
-	}
-	
-	/**
-	 * Returns the maximum limit of character allowed for this TextField
-	 * @return int
-	 */
-	public int getMaxLength() {
-		return this.maxLength;
 	}
 	
 	@Override
@@ -982,7 +977,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	 * Overridable hook for lose tab focus event
 	 */
 	public void controlTextFieldResetTabFocusHook() {  }
-
+	
 	@Override
 	public void onGetFocus(MouseMotionEvent evt) {
 		if (getIsEnabled()) screen.setCursor(CursorType.TEXT);
@@ -994,7 +989,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		if (getIsEnabled()) screen.setCursor(CursorType.POINTER);
 		setHasFocus(false);
 	}
-	
+
 	public final void updateText(String text) {
 		this.text = text;
 		if (textElement == null) {
@@ -1017,12 +1012,12 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	}
 	
 	private void centerTextVertically() {
-		
+
 		float height = BitmapTextUtil.getTextLineHeight(this, testString);
 		float nextY = height-FastMath.floor(getHeight());
 		nextY /= 2;
 		nextY = (float)FastMath.ceil(nextY)+1;
-		
+
 		setTextPosition(getTextPosition().x, -nextY);
 	}
 	
@@ -1032,10 +1027,10 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			float time = screen.getApplication().getTimer().getTimeInSeconds();
 			if (time-compareClick > .2f) resetClickCounter();
 			compareClick = time;
-			
+
 			isPressed = true;
 			clickCount++;
-			
+
 			switch (clickCount) {
 				case 1:
 					firstClick = time;
@@ -1097,13 +1092,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			}
 		}
 	}
-
+	
 	@Override
 	public void onMouseRightPressed(MouseButtonEvent evt) {  }
 
 	@Override
 	public void onMouseRightReleased(MouseButtonEvent evt) {  }
-	
+
 	private void stillPressedInterval() {
 		if (screen.getMouseXY().x > getAbsoluteWidth() && caretIndex < finalText.length())
 			caretIndex++;
@@ -1117,7 +1112,6 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			this.setTextRangeEnd(0);
 	}
 	
-	// Text Range methods
 	/**
 	 * Sets the current text range to all text within the TextField
 	 */
@@ -1127,7 +1121,9 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		caretIndex = finalText.length();
 		getVisibleText();
 	}
-	
+
+	// Text Range methods
+
 	/**
 	 * Resets the current text range
 	 */
@@ -1165,7 +1161,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 		}
 		if (nHead < 0) nHead = 0;
 		if (nTail > finalText.length()) nTail = finalText.length();
-		
+
 		this.setTextRangeStart(nHead);
 		this.setTextRangeEnd(nTail);
 		caretIndex = nTail;
@@ -1206,12 +1202,12 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	private void setTextRangeEnd(int tail) {
 		if (!visibleText.equals("") && rangeHead != -1) {
 			widthTest.setSize(getFontSize());
-			
+
 			widthTest.setText(".");
 			float diff = widthTest.getLineWidth();
-			
+
 			float rangeX;
-			
+
 			if (rangeHead-this.head <= 0) {
 				widthTest.setText("");
 				rangeX = widthTest.getLineWidth();
@@ -1229,12 +1225,12 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				widthTest.setText(visibleText);
 				rangeX = widthTest.getLineWidth();
 			}
-			
+
 			if (rangeHead >= this.head)
 				rangeX = getAbsoluteX()+rangeX+getTextPadding();
 			else
 				rangeX = getTextPadding();
-			
+
 			rangeTail = tail;
 			if (tail-this.head <= 0)
 				widthTest.setText("");
@@ -1242,9 +1238,9 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				widthTest.setText(visibleText.substring(0, tail-this.head));
 			else
 				widthTest.setText(visibleText);
-			
+
 			textRangeText = (rangeHead < rangeTail) ? finalText.substring(rangeHead, rangeTail) : finalText.substring(rangeTail, rangeHead);
-			
+
 			float rangeW = getTextPadding();
 			if (rangeTail <= this.tail) {
 				float width = widthTest.getLineWidth();
@@ -1256,7 +1252,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				}
 				rangeW = getAbsoluteX()+width+getTextPadding();
 			}
-			
+
 			if (rangeHead > rangeTail) {
 				caret.getMaterial().setFloat("TextRangeStart", rangeW);
 				caret.getMaterial().setFloat("TextRangeEnd", rangeX);
@@ -1264,7 +1260,7 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 				caret.getMaterial().setFloat("TextRangeStart", rangeX);
 				caret.getMaterial().setFloat("TextRangeEnd", rangeW);
 			}
-			
+
 			caret.getMaterial().setBoolean("ShowTextRange", true);
 		}
 	}
@@ -1303,13 +1299,13 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			newText = finalText.substring(0,tail) + insertText + finalText.substring(head, finalText.length());
 			tempIndex = tail+insertText.length();
 		}
-		
+
 		try { newText = newText.replace("\r", ""); }
 		catch (Exception ex) {  }
-		
+
 		try { newText = newText.replace("\n", ""); }
 		catch (Exception ex) {  }
-		
+
 		if (this.type != Type.DEFAULT) {
 			String grabBag = "";
 			switch (type) {
@@ -1360,16 +1356,16 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 			}
 			tempIndex = newText.length();
 		}
-		
+
 		if (maxLength != 0 && newText.length() > maxLength) {
 			newText = newText.substring(0, maxLength);
 			tempIndex = maxLength;
 		}
-		
+
 		int testIndex = (head > tail) ? tail : head;
-		
+
 		setText(newText);
-		
+
 		caretIndex = testIndex;
 	}
 	
@@ -1390,5 +1386,18 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
 	}
 	
 	@Override
-	public void render(RenderManager rm, ViewPort vp) {  }
+	public void render(RenderManager rm, ViewPort vp) {
+	}
+
+	public static enum Type {
+		DEFAULT,
+		ALPHA,
+		ALPHA_NOSPACE,
+		NUMERIC,
+		ALPHANUMERIC,
+		ALPHANUMERIC_NOSPACE,
+		EXCLUDE_SPECIAL,
+		EXCLUDE_CUSTOM,
+		INCLUDE_CUSTOM
+	}
 }

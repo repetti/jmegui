@@ -208,14 +208,6 @@ public class CheckBox extends ButtonAdapter {
 		addChild(label);
 	}
 	
-	/**
-	 * Checks/unchecks the checkbox
-	 * @param isChecked 
-	 */
-	public void setIsChecked(boolean isChecked) {
-		setIsToggled(isChecked);
-	}
-	
 	public void setIsCheckedNoCallback(boolean isChecked) {
 		setIsToggledNoCallback(isChecked);
 	}
@@ -230,6 +222,15 @@ public class CheckBox extends ButtonAdapter {
 	 */
 	public boolean getIsChecked() {
 		return this.getIsToggled();
+	}
+
+	/**
+	 * Checks/unchecks the checkbox
+	 *
+	 * @param isChecked
+	 */
+	public void setIsChecked(boolean isChecked) {
+		setIsToggled(isChecked);
 	}
 	
 	public class ClickableLabel extends Label implements MouseButtonListener, MouseFocusListener {

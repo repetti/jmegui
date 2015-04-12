@@ -14,8 +14,6 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.scrolling.ScrollArea;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
@@ -24,24 +22,25 @@ import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.listeners.KeyboardListener;
 import tonegod.gui.listeners.MouseButtonListener;
 import tonegod.gui.listeners.MouseMovementListener;
-import tonegod.gui.listeners.MouseWheelListener;
 import tonegod.gui.listeners.TabFocusListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author t0neg0d
  */
 public abstract class SelectList extends ScrollArea implements MouseMovementListener, MouseButtonListener, TabFocusListener, KeyboardListener {
+	protected int currentListItemIndex = -1;
 	private List<ListItem> listItems = new ArrayList();
 	private List<Integer> selectedIndexes = new ArrayList();
 	private List<Element> highlights = new ArrayList();
-	
 	private boolean isMultiselect = false;
 	private float initWidth;
 	private float listItemHeight;
 	private float listPadding = 1;
 	private ColorRGBA highlightColor;
-	protected int currentListItemIndex = -1;
 	private boolean shift = false, ctrl = false;
 	
 	/**
@@ -173,13 +172,14 @@ public abstract class SelectList extends ScrollArea implements MouseMovementList
 		this.highlightColor.set(color);
 	}
 	
-	public void setIsMultiselect(boolean isMultiselect) {
-		this.isMultiselect = isMultiselect;
-	}
-	
 	public boolean getIsMultiselect() {
 		return this.isMultiselect;
 	}
+
+	public void setIsMultiselect(boolean isMultiselect) {
+		this.isMultiselect = isMultiselect;
+	}
+
 	/**
 	 * Adds a ListItem to the Menu
 	 * @param caption The display caption of the MenuItem
@@ -330,32 +330,6 @@ public abstract class SelectList extends ScrollArea implements MouseMovementList
 	}
 	
 	/**
-	 * Sets the current selected index for single select SelectLists
-	 * @param index int
-	 */
-	public void setSelectedIndex(Integer index) {
-		if (index < 0) index = 0;
-		else if (index >= listItems.size()) index = listItems.size()-1;
-		selectedIndexes = new ArrayList();
-		selectedIndexes.add(index);
-		displayHighlights();
-		onChange();
-	}
-	
-	/**
-	 * Sets the current list of selected indexes to the specified indexes
-	 * @param indexes 
-	 */
-	public void setSelectedIndexes(Integer... indexes) {
-		for (int i = 0; i < indexes.length; i++) {
-			if (!selectedIndexes.contains(indexes[i]))
-				selectedIndexes.add(indexes[i]);
-		}
-		displayHighlights();
-		onChange();
-	}
-	
-	/**
 	 * Adds the specified index to the list of selected indexes
 	 * @param index int
 	 */
@@ -388,6 +362,19 @@ public abstract class SelectList extends ScrollArea implements MouseMovementList
 	}
 	
 	/**
+	 * Sets the current selected index for single select SelectLists
+	 * @param index int
+	 */
+	public void setSelectedIndex(Integer index) {
+		if (index < 0) index = 0;
+		else if (index >= listItems.size()) index = listItems.size() - 1;
+		selectedIndexes = new ArrayList();
+		selectedIndexes.add(index);
+		displayHighlights();
+		onChange();
+	}
+
+	/**
 	 * Returns the entire list of selected indexes
 	 * @return List<Integer>
 	 */
@@ -395,6 +382,19 @@ public abstract class SelectList extends ScrollArea implements MouseMovementList
 		return this.selectedIndexes;
 	}
 	
+	/**
+	 * Sets the current list of selected indexes to the specified indexes
+	 * @param indexes
+	 */
+	public void setSelectedIndexes(Integer... indexes) {
+		for (int i = 0; i < indexes.length; i++) {
+			if (!selectedIndexes.contains(indexes[i]))
+				selectedIndexes.add(indexes[i]);
+		}
+		displayHighlights();
+		onChange();
+	}
+
 	/**
 	 * Returns the ListItem at the specified index
 	 * @param index int
@@ -630,37 +630,37 @@ public abstract class SelectList extends ScrollArea implements MouseMovementList
 	}
 	
 	public abstract void onChange();
+
+	public void scrollToSelected() {
+		int rIndex = getSelectedIndex();
+		float diff = (rIndex + 1) * getListItemHeight();
+
+		float y = -(getScrollableHeight() - diff);
+
+		if (FastMath.abs(y) > getScrollableHeight()) {
+			y = getScrollableHeight();
+		}
+
+		scrollThumbYTo(y);
+	}
 	
 	public class ListItem {
 		SelectList owner;
 		String caption;
 		Object value;
-		
+
 		public ListItem(SelectList owner, String caption, Object value) {
 			this.owner = owner;
 			this.caption = caption;
 			this.value = value;
 		}
-		
+
 		public String getCaption() {
 			return this.caption;
 		}
-		
+
 		public Object getValue() {
 			return this.value;
 		}
-	}
-	
-	public void scrollToSelected() {
-		int rIndex = getSelectedIndex();
-		float diff = (rIndex+1) * getListItemHeight();
-		
-		float y = -(getScrollableHeight()-diff);
-		
-		if (FastMath.abs(y) > getScrollableHeight()) {
-			y = getScrollableHeight();
-		}
-		
-		scrollThumbYTo(y);
 	}
 }

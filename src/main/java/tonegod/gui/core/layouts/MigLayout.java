@@ -6,13 +6,14 @@ package tonegod.gui.core.layouts;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.StringTokenizer;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.Element.Borders;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.layouts.LayoutHint.Align;
 import tonegod.gui.core.layouts.LayoutHint.SizeUnit;
 import tonegod.gui.core.layouts.LayoutHint.VAlign;
+
+import java.util.StringTokenizer;
 
 /**
  *
@@ -183,36 +184,6 @@ public class MigLayout extends AbstractLayout {
 		}
 	}
 	
-	public class Cell {
-		int col, row;
-		Vector2f pos = new Vector2f();
-		Vector2f initsize = new Vector2f(0,0);
-		Vector2f size = new Vector2f();
-		SizeUnit wUnit, hUnit;
-		
-		public Cell(int row, int col) {
-			this.row = row;
-			this.col = col;
-		}
-		
-		public void setPos(float x, float y) {
-			pos.set(x,y);
-		}
-		
-		public void setSize(float w, float h) {
-			size.set(w,h);
-		}
-		
-		public void setSizeUnits(SizeUnit wUnit, SizeUnit hUnit) {
-			this.wUnit = wUnit;
-			this.hUnit = hUnit;
-		}
-		
-		public void setInitSize(float w, float h) {
-			initsize.set(w,h);
-		}
-	}
-	
 	@Override
 	public void resize() {
 		oldcells = cells;
@@ -250,11 +221,11 @@ public class MigLayout extends AbstractLayout {
 			LayoutHint grow = el.getLayoutHints().get("grow");
 			boolean growx = (grow == null) ? true : (Boolean)grow.getValues().get("x").getValue();
 			boolean growy = (grow == null) ? true : (Boolean)grow.getValues().get("y").getValue();
-			
+
 			LayoutHint fill = el.getLayoutHints().get("fill");
 			boolean fillx = (fill == null) ? true : (Boolean)fill.getValues().get("x").getValue();
 			boolean filly = (fill == null) ? true : (Boolean)fill.getValues().get("y").getValue();
-			
+
 			float totalW = 0, totalH = 0;
 			for (int t = c; t < c+sc; t++) {
 				totalW += cells[0][t].size.x;
@@ -293,9 +264,9 @@ public class MigLayout extends AbstractLayout {
 			el.setX(cells[r][c].pos.x);
 			el.setY(cells[r][c].pos.y);
 			float minx = 0, miny = 0;
-			
+
 			el.resize((int)(el.getAbsoluteX()+(w-(padLeft+padRight))),(int)(el.getAbsoluteY()+(h-(padTop+padBottom))), Borders.SE);
-			
+
 			if (!growx) {
 				float newX = 0;
 				switch (align) {
@@ -330,9 +301,9 @@ public class MigLayout extends AbstractLayout {
 			} else {
 				el.setY(el.getY()+padTop);
 			}
-			
+
 			el.setY(owner.getHeight()-el.getY()-el.getHeight());
-			
+
 			if (clip) {
 				if (el.getClippingDefine(owner) == null) {
 					el.addClippingLayer(owner,Vector4f.ZERO);
@@ -347,5 +318,35 @@ public class MigLayout extends AbstractLayout {
 			}
 		}
 		props = true;
+	}
+
+	public class Cell {
+		int col, row;
+		Vector2f pos = new Vector2f();
+		Vector2f initsize = new Vector2f(0, 0);
+		Vector2f size = new Vector2f();
+		SizeUnit wUnit, hUnit;
+
+		public Cell(int row, int col) {
+			this.row = row;
+			this.col = col;
+		}
+
+		public void setPos(float x, float y) {
+			pos.set(x, y);
+		}
+
+		public void setSize(float w, float h) {
+			size.set(w, h);
+		}
+
+		public void setSizeUnits(SizeUnit wUnit, SizeUnit hUnit) {
+			this.wUnit = wUnit;
+			this.hUnit = hUnit;
+		}
+
+		public void setInitSize(float w, float h) {
+			initsize.set(w, h);
+		}
 	}
 }

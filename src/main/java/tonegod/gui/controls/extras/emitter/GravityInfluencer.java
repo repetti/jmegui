@@ -37,17 +37,13 @@ public class GravityInfluencer extends InfluencerBase {
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
-	}
-
-	@Override
 	public boolean getIsEnabled() {
 		return this.isEnabled;
 	}
-	
-	public void setGravity(Vector2f gravity) {
-		this.gravity.set(gravity.mult(100));
+
+	@Override
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	public void setGravity(float x, float y) {
@@ -56,6 +52,10 @@ public class GravityInfluencer extends InfluencerBase {
 	
 	public Vector2f getGravity() {
 		return this.gravity.mult(0.001f);
+	}
+
+	public void setGravity(Vector2f gravity) {
+		this.gravity.set(gravity.mult(100));
 	}
 	
 	@Override

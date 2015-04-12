@@ -16,11 +16,11 @@ import tonegod.gui.core.utils.UIDUtil;
  * @author t0neg0d
  */
 public class ModalBackground extends Element {
-	private boolean useSeparateAlpha = true;
 	ColorRGBA resetColor = new ColorRGBA(0.5f,0.5f,0.5f,0.5f);
 	ColorRGBA bgColor = new ColorRGBA();
 	float resetAlpha = 0.5f;
 	float alpha = 0.5f;
+	private boolean useSeparateAlpha = true;
 	
 	public ModalBackground(Screen screen) {
 		super(

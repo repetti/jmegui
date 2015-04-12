@@ -11,12 +11,13 @@ import com.jme3.input.event.KeyInputEvent;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.text.TextField;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -256,6 +257,20 @@ public abstract class Spinner extends TextField {
 	}
 	
 	/**
+	 * Sets the selected index of the Spinner to the provided index
+	 * @param selectedIndex int
+	 */
+	public void setSelectedIndex(int selectedIndex) {
+		if (selectedIndex < 0)
+			selectedIndex = 0;
+		else if (selectedIndex > stepValues.size() - 1)
+			selectedIndex = stepValues.size() - 1;
+
+		this.selectedIndex = selectedIndex;
+		displaySelectedStep();
+	}
+
+	/**
 	 * Sets the interval speed for the spinner
 	 * @param callsPerSecond float
 	 */
@@ -326,24 +341,10 @@ public abstract class Spinner extends TextField {
 			selectedIndex = 0;
 		else if (selectedIndex > stepValues.size()-1)
 			selectedIndex = stepValues.size()-1;
-		
+
 		this.selectedIndex = selectedIndex;
 		displaySelectedStep();
 		onChange(selectedIndex, stepValues.get(selectedIndex));
-	}
-	
-	/**
-	 * Sets the selected index of the Spinner to the provided index
-	 * @param selectedIndex int
-	 */
-	public void setSelectedIndex(int selectedIndex) {
-		if (selectedIndex < 0)
-			selectedIndex = 0;
-		else if (selectedIndex > stepValues.size()-1)
-			selectedIndex = stepValues.size()-1;
-		
-		this.selectedIndex = selectedIndex;
-		displaySelectedStep();
 	}
 	
 	private void incStep() {

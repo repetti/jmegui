@@ -4,13 +4,10 @@
  */
 package tonegod.gui.controls.extras;
 
-import com.jme3.font.Rectangle;
 import com.jme3.input.event.KeyInputEvent;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.form.Form;
 import tonegod.gui.controls.lists.Spinner;
@@ -20,21 +17,22 @@ import tonegod.gui.controls.windows.Panel;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class ChatBox extends Panel {
+	protected List<String> chatMessages = new ArrayList();
 	private ScrollPanel saChatArea;
 	private TextField tfChatInput;
 	private ButtonAdapter btnChatSendMsg;
 	private Spinner spnChannels;
-	
 	private Form chatForm;
-	
 	private int sendKey;
 	private int chatHistorySize = 30;
-	protected List<String> chatMessages = new ArrayList();
 	
 	/**
 	 * Creates a new instance of the ChatBox control

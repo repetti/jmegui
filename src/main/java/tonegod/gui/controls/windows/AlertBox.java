@@ -18,9 +18,9 @@ import tonegod.gui.core.utils.UIDUtil;
  * @author t0neg0d
  */
 public abstract class AlertBox extends Window {
+	protected Form form;
 	private ScrollPanel dlg;
 	private ButtonAdapter btnOk;
-	protected Form form;
 	
 	/**
 	 * Creates a new instance of the AlertBox control

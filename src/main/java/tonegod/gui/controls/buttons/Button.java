@@ -24,7 +24,6 @@ import tonegod.gui.controls.text.TextElement;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.Screen;
-import tonegod.gui.style.StyleManager.CursorType;
 import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
@@ -33,6 +32,7 @@ import tonegod.gui.listeners.MouseButtonListener;
 import tonegod.gui.listeners.MouseFocusListener;
 import tonegod.gui.listeners.TabFocusListener;
 import tonegod.gui.style.Style;
+import tonegod.gui.style.StyleManager.CursorType;
 
 /**
  *
@@ -47,10 +47,7 @@ public abstract class Button extends Element implements Control, MouseButtonList
 	protected ColorRGBA hoverFontColor = null, pressedFontColor = null;
 	protected boolean isToggleButton = false;
 	protected boolean isToggled = false;
-	private Spatial spatial;
 	protected boolean isStillPressed = false;
-	private boolean useInterval = false;
-	private float intervalsPerSecond = 4;
 	protected float trackInterval = (4/1000), currentTrack = 0;
 	protected boolean initClickPause = false;
 	protected float initClickInterval = 0.25f, currentInitClickTrack = 0;
@@ -61,6 +58,9 @@ public abstract class Button extends Element implements Control, MouseButtonList
 	// Optional LabelElement
 	protected boolean useOptionalLabel = false;
 	protected TextElement buttonLabel;
+	private Spatial spatial;
+	private boolean useInterval = false;
+	private float intervalsPerSecond = 4;
 	
 	/**
 	 * Creates a new instance of the Button control
@@ -259,9 +259,18 @@ public abstract class Button extends Element implements Control, MouseButtonList
 	}
 	
 	/**
+	 * Returns if the Button is flagged as a Toggle Button
+	 *
+	 * @return boolean isToggleButton
+	 */
+	public boolean getIsToggleButton() {
+		return this.isToggleButton;
+	}
+	
+	/**
 	 * Sets if the button is to interact as a Toggle Button
 	 * Click once to activate / Click once to deactivate
-	 * 
+	 *
 	 * @param isToggleButton boolean
 	 */
 	public void setIsToggleButton(boolean isToggleButton) {
@@ -270,30 +279,21 @@ public abstract class Button extends Element implements Control, MouseButtonList
 	
 	/**
 	 * Returns if the Button is flagged as a Toggle Button
-	 * 
-	 * @return boolean isToggleButton
+	 *
+	 * @return boolean isRadioButton
 	 */
-	public boolean getIsToggleButton() {
-		return this.isToggleButton;
+	public boolean getIsRadioButton() {
+		return this.isRadioButton;
 	}
 	
 	/**
 	 * Sets if the button is to interact as a Radio Button
 	 * Click once to activate - stays active
-	 * 
+	 *
 	 * @param isRadioButton boolean
 	 */
 	public void setIsRadioButton(boolean isRadioButton) {
 		this.isRadioButton = isRadioButton;
-	}
-	
-	/**
-	 * Returns if the Button is flagged as a Toggle Button
-	 * 
-	 * @return boolean isRadioButton
-	 */
-	public boolean getIsRadioButton() {
-		return this.isRadioButton;
 	}
 	
 	/**
@@ -316,18 +316,27 @@ public abstract class Button extends Element implements Control, MouseButtonList
 	}
 	
 	/**
+	 * Returns the current toggle state of the Button if the Button has been flagged as
+	 * isToggle
+	 * @return boolean isToggle
+	 */
+	public boolean getIsToggled() {
+		return this.isToggled;
+	}
+	
+	/**
 	 * Set a toggle button state to toggled/untoggled and calls the user left mouse button event methods
 	 * @param isToggled boolean
 	 */
 	public void setIsToggled(boolean isToggled) {
 		this.isToggled = isToggled;
-		
+
 		if (pressedImg != null && isToggled) {
 			runPressedEffect(false);
 		} else {
 			runResetEffect();
 		}
-		
+
 		MouseButtonEvent evtd = new MouseButtonEvent(0,true,0,0);
 		MouseButtonEvent evtu = new MouseButtonEvent(0,false,0,0);
 		onButtonMouseLeftDown(evtd, isToggled);
@@ -338,15 +347,6 @@ public abstract class Button extends Element implements Control, MouseButtonList
 		}
 		evtu.setConsumed();
 		evtd.setConsumed();
-	}
-	
-	/**
-	 * Returns the current toggle state of the Button if the Button has been flagged as 
-	 * isToggle
-	 * @return boolean isToggle
-	 */
-	public boolean getIsToggled() {
-		return this.isToggled;
 	}
 	
 	/**

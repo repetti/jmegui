@@ -47,6 +47,11 @@ public class TextureRegion {
 		setRegion(region, x, y, width, height);
 	}
 
+	public static TextureRegion[][] split(Texture texture, int tileWidth, int tileHeight) {
+		TextureRegion region = new TextureRegion(texture);
+		return region.split(tileWidth, tileHeight);
+	}
+
 	public void setRegion (Texture texture) {
 		this.texture = texture;
 		setRegion(0, 0, texture.getImage().getWidth(), texture.getImage().getHeight());
@@ -209,10 +214,5 @@ public class TextureRegion {
 		}
 
 		return tiles;
-	}
-
-	public static TextureRegion[][] split (Texture texture, int tileWidth, int tileHeight) {
-		TextureRegion region = new TextureRegion(texture);
-		return region.split(tileWidth, tileHeight);
 	}
 }

@@ -6,10 +6,11 @@ package tonegod.gui.core.layouts;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.HashMap;
-import java.util.Map;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -84,16 +85,14 @@ public abstract class AbstractLayout implements Layout {
 	}
 	
 	@Override
-	public void setHandlesResize(boolean handlesResize) {
-		this.handlesResize = handlesResize;
-	}
-	
-	@Override
 	public boolean getHandlesResize() {
 		return handlesResize;
 	}
-	
-	
+
+	@Override
+	public void setHandlesResize(boolean handlesResize) {
+		this.handlesResize = handlesResize;
+	}
 	
 	protected void convertElementProperties(Element el) {
 		if (!props) {

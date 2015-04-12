@@ -5,17 +5,9 @@
 package tonegod.gui.controls.windows;
 
 import com.jme3.font.BitmapFont.Align;
-import static com.jme3.font.BitmapFont.Align.Center;
-import static com.jme3.font.BitmapFont.Align.Left;
-import static com.jme3.font.BitmapFont.Align.Right;
 import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import tonegod.gui.controls.buttons.Button;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.buttons.RadioButtonGroup;
@@ -30,12 +22,13 @@ import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.framework.core.AnimText;
 
+import java.util.*;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class TabControl extends Element {
-	private Orientation orientation = Orientation.HORIZONTAL;
 	protected List<Button> tabs = new ArrayList();
 	protected Map<Integer,ITabPanel> tabPanels = new HashMap();
 	protected int tabButtonIndex = 0;
@@ -48,7 +41,7 @@ public abstract class TabControl extends Element {
 	protected float tabTraySize, tabTrayOverlap = 3;
 	protected float tabOverhang = 6;
 	protected float labelPadding = 24;
-	
+	private Orientation orientation = Orientation.HORIZONTAL;
 	private Vector2f pos = new Vector2f(),
 					dim = new Vector2f();
 	

@@ -1,9 +1,5 @@
 package tonegod.gui.core;
 
-import tonegod.gui.style.StyleManager;
-import tonegod.gui.style.LayoutParser;
-import tonegod.gui.style.Style;
-import tonegod.gui.style.StyleLoader;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.audio.AudioNode;
@@ -17,19 +13,8 @@ import com.jme3.font.Rectangle;
 import com.jme3.font.plugins.BitmapFontLoader;
 import com.jme3.input.KeyInput;
 import com.jme3.input.RawInputListener;
-import com.jme3.input.event.InputEvent;
-import com.jme3.input.event.JoyAxisEvent;
-import com.jme3.input.event.JoyButtonEvent;
-import com.jme3.input.event.KeyInputEvent;
-import com.jme3.input.event.MouseButtonEvent;
-import com.jme3.input.event.MouseMotionEvent;
-import com.jme3.input.event.TouchEvent;
-import com.jme3.math.FastMath;
-import com.jme3.math.Ray;
-import com.jme3.math.Triangle;
-import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
-import com.jme3.math.Vector4f;
+import com.jme3.input.event.*;
+import com.jme3.math.*;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Geometry;
@@ -39,21 +24,6 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.control.Control;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.io.IOException;
-import java.nio.FloatBuffer;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import tonegod.gui.controls.extras.android.Keyboard;
 import tonegod.gui.controls.form.Form;
 import tonegod.gui.controls.lists.ComboBox;
@@ -63,7 +33,6 @@ import tonegod.gui.controls.text.TextField;
 import tonegod.gui.controls.util.ModalBackground;
 import tonegod.gui.controls.util.ToolTip;
 import tonegod.gui.core.Element.Borders;
-import tonegod.gui.style.StyleManager.CursorType;
 import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.ScaleUtil;
 import tonegod.gui.core.utils.UIDUtil;
@@ -71,42 +40,55 @@ import tonegod.gui.effects.EffectManager;
 import tonegod.gui.effects.cursor.CursorEffects;
 import tonegod.gui.fonts.BitmapFontLoaderX;
 import tonegod.gui.framework.core.AnimElement;
-import tonegod.gui.framework.core.AnimManager;
 import tonegod.gui.framework.core.AnimLayer;
+import tonegod.gui.framework.core.AnimManager;
 import tonegod.gui.framework.core.QuadData;
 import tonegod.gui.listeners.*;
+import tonegod.gui.style.LayoutParser;
+import tonegod.gui.style.Style;
+import tonegod.gui.style.StyleLoader;
+import tonegod.gui.style.StyleManager;
+import tonegod.gui.style.StyleManager.CursorType;
+
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.text.ParseException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.jme3.font.Rectangle;
 
 /**
  *
  * @author t0neg0d
  */
 public class Screen implements ElementManager, Control, RawInputListener {
-	private enum EventCheckType {
-		MouseLeft,
-		MouseRight,
-		MouseFocus,
-		WheelClick,
-		WheelMove,
-		Touch,
-		TouchMove,
-		Fling,
-		None
-	}
-	private Application app;
 	protected Spatial spatial;
+	protected EffectManager effectManager;
+	protected AnimManager animManager;
+	protected Node t0neg0dGUI = new Node("t0neg0dGUI");
+	// Android input scaling
+	float inputScale = 1;
+	float orWidth, orHeight;
+	boolean orDim = false;
+	private Application app;
 	private Map<String, Element> elements = new LinkedHashMap();
 	private Map<String, SubScreen> subscreens = new HashMap();
 	private Ray elementZOrderRay = new Ray();
 	private Vector3f guiRayOrigin = new Vector3f();
 	private CollisionResults results;
-	
 	private boolean useMultiTouch = false;
 	private Vector2f tempElementOffset = new Vector2f();
 	private Map<Integer,Vector2f> elementOffsets = new HashMap();
 	private Map<Integer,Element> contactElements = new HashMap();
 	private Map<Integer,Element> eventElements = new HashMap();
 	private Map<Integer,Borders> eventElementResizeDirections = new HashMap();
-	
 	private Element eventElement = null;
 	private Element targetElement = null;
 	private Element keyboardElement = null;
@@ -128,57 +110,38 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	private boolean mouseRightPressed = false;
 	private boolean mouseWheelPressed = false;
 	private CollisionResult lastCollision;
-	
 	private float zOrderCurrent = .5f;
 	private float zOrderStepMajor = .01f;
 	private float zOrderStepMinor = 0.0001f;
-	
 	private String clipboardText = "";
-	
 	private CursorEffects cursorEffects;
 	private StyleManager styleManager;
 	private LayoutParser layoutParser;
-	protected EffectManager effectManager;
-	protected AnimManager animManager;
-	
-	protected Node t0neg0dGUI = new Node("t0neg0dGUI");
-	
 	private Vector2f touchXY = new Vector2f(0,0);
 	private Vector2f mouseXY = new Vector2f(0,0);
 	private boolean SHIFT = false;
 	private boolean CTRL = false;
 	private boolean ALT = false;
-	
 	private boolean useCustomCursors = false;
 	private boolean forceCursor = false;
 	private CursorType currentCursor = CursorType.POINTER;
-	
 	private boolean useToolTips = false;
 	private ToolTip toolTip = null;
 	private float toolTipMaxWidth = 250;
 	private String forcedToolTipText = "";
 	private boolean forcedToolTip = false;
-	
 	private float globalAlpha = 1.0f;
-	
 	private boolean useUIAudio = false;
 	private float uiAudioVolume = 1;
-	
 	private boolean useCursorEffects = false;
-	
 	private Clipboard clipboard;
 	private boolean clipboardActive = false;
-	
 	private boolean useTextureAtlas = false;
 	private Texture atlasTexture;
-        
 	private ElementQuadGrid mesh;
-	
 	private BitmapFont defaultGUIFont;
-	
 	private ModalBackground modalBackground;
 	private Keyboard virtualKeys;
-	
 	// AnimLayer & 2D framework support
 	private Map<String, AnimLayer> layers = new LinkedHashMap();
 	private float layerZOrderCurrent = .4999f;
@@ -194,7 +157,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	private float eventAnimOffsetY = 0;
 	private float eventQuadOffsetX = 0;
 	private float eventQuadOffsetY = 0;
-	
 	// SubScreen collisions
 	private Vector2f click2d = new Vector2f(), tempV2 = new Vector2f();
 	private Vector3f click3d = new Vector3f(), pickOrigin = new Vector3f(), pickDir = new Vector3f();
@@ -209,9 +171,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			uv1 = new Vector2f(),
 			uv2 = new Vector2f(),
 			uv3 = new Vector2f();
-	
 	private boolean initializedLoader;
-	
 	// 3D scene support
 	private boolean use3DSceneSupport = false;
 	private Node mouseFocusNode = null;
@@ -219,19 +179,12 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	private Node previousMouseFocusNode = null;
 	private SafeArrayList<Node> scenes = new SafeArrayList(Node.class);
 	private Map<Integer,Node> eventNodes = new HashMap();
-	
-	// Android input scaling
-	float inputScale = 1;
-	
-	float orWidth, orHeight;
-	boolean orDim = false;
-	
 	private ScaleUtil scaleManager;
 	
 	/**
 	 * Creates a new instance of the Screen control using the default style information
 	 * provided with the library.
-	 * 
+	 *
 	 * @param app A JME Application
 	 */
 	public Screen(Application app) {
@@ -240,7 +193,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	/**
 	 * Creates an instance of the Screen control.
-	 * 
+	 *
 	 * @param app A JME Application
 	 * @param styleMap A path to the style_map.xml file containing the custom theme information
 	 */
@@ -257,18 +210,18 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			app.getAssetManager().unregisterLoader(BitmapFontLoader.class);
 			app.getAssetManager().registerLoader(BitmapFontLoaderX.class, "fnt");
 		} catch (Exception ex) {  }
-		
+
 		styleManager = new StyleManager(this,styleMap);
 		styleManager.parseStyles(styleMap);
 		effectManager = new EffectManager(this);
 		animManager = new AnimManager(this);
 		app.getInputManager().addRawInputListener(this);
 		layoutParser = new LayoutParser(this);
-		
+
 		defaultGUIFont = app.getAssetManager().loadFont(styleManager.getStyle("Font").getString("defaultFont"));
-		
+
 		scenes.add((Node)app.getViewPort().getScenes().get(0));
-		
+
 		scaleManager = new ScaleUtil(this);
 		scaleManager.initialize();
 	}
@@ -282,7 +235,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		this.orHeight = height;
 		this.orDim = true;
 		this.inputScale = 1f/(app.getViewPort().getCamera().getWidth()/width);
-		
+
 		this.app = app;
 		this.elementZOrderRay.setDirection(Vector3f.UNIT_Z);
 		this.results = new CollisionResults();
@@ -290,20 +243,50 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			app.getAssetManager().unregisterLoader(BitmapFontLoader.class);
 			app.getAssetManager().registerLoader(BitmapFontLoaderX.class, "fnt");
 		} catch (Exception ex) {  }
-		
+
 		styleManager = new StyleManager(this,styleMap);
 		styleManager.parseStyles(styleMap);
 		effectManager = new EffectManager(this);
 		animManager = new AnimManager(this);
 		app.getInputManager().addRawInputListener(this);
 		layoutParser = new LayoutParser(this);
-		
+
 		scenes.add((Node)app.getViewPort().getScenes().get(0));
-		
+
 		scaleManager = new ScaleUtil(this);
 		scaleManager.initialize();
 	}
-	
+
+	//<editor-fold desc="OS Helpers">
+	public static boolean isWindows() {
+		String OS = System.getProperty("os.name").toLowerCase();
+		return (OS.indexOf("win") >= 0);
+	}
+
+	public static boolean isMac() {
+		String OS = System.getProperty("os.name").toLowerCase();
+		return (OS.indexOf("mac") >= 0);
+	}
+
+	public static boolean isUnix() {
+		String OS = System.getProperty("os.name").toLowerCase();
+		return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0);
+	}
+
+	public static boolean isSolaris() {
+		String OS = System.getProperty("os.name").toLowerCase();
+		return (OS.indexOf("sunos") >= 0);
+	}
+
+	;
+
+	public static boolean isAndroid() {
+		String OS = System.getProperty("java.vendor").toLowerCase();
+		return (OS.indexOf("android") >= 0);
+	}
+
+	;
+
 	/**
 	 * Returns the JME application associated with the Screen
 	 * @return Application app
@@ -312,41 +295,44 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public Application getApplication() {
 		return this.app;
 	}
-	
+
+	;
+
 	@Override
 	public ScaleUtil getScaleManager() {
 		return this.scaleManager;
 	}
+
+	;
 	
 	@Override
 	public float scaleFloat(float in) {
 		return in*scaleManager.getGameScale();
 	};
-	
+
 	@Override
 	public Vector2f scaleVector2f(Vector2f in) {
 		return in.mult(scaleManager.getGameScale());
-	};
-	
+	}
+
 	@Override
 	public Vector3f scaleVector3f(Vector3f in) {
 		return in.mult(scaleManager.getGameScale());
-	};
-	
+	}
+
 	@Override
 	public Vector4f scaleVector4f(Vector4f in) {
 		return in.mult(scaleManager.getGameScale());
-	};
-	
+	}
+
 	@Override
 	public float scaleFontSize(float in) {
 		return in*scaleManager.getFontScale();
-	};
-	
+	}
 	
 	/**
 	 * Return the width of the current Viewport
-	 * 
+	 *
 	 * @return float width
 	 */
 	@Override
@@ -356,7 +342,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	/**
 	 * Returns the height of the current Viewport
-	 * 
+	 *
 	 * @return  float height
 	 */
 	@Override
@@ -370,7 +356,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	@Deprecated
 	public void initialize() {
 	//	app.getInputManager().addRawInputListener(this);
-		
+
 	//	if (getUseCustomCursors())
 	//		setCursor(CursorType.POINTER);
 	}
@@ -390,7 +376,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			addElement(element, true);
 			return;
 		}
-		
+
 		if (getElementById(element.getUID()) != null) {
 			try {
 				throw new ConflictingIDException();
@@ -423,7 +409,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public void addElement(Element element, boolean hide) {
 		if (element instanceof AutoHide)
 			hide = true;
-		
+
 		if (getElementById(element.getUID()) != null) {
 			try {
 				throw new ConflictingIDException();
@@ -445,11 +431,11 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			getNextZOrder(true);
 			element.initZOrder(zOrderCurrent);
 			element.resize(element.getX()+element.getWidth(), element.getY()+element.getHeight(), Borders.SE);
-			
+
 			if (hide)
 				element.hide();
 		}
-		
+
 	}
 	
 	/**
@@ -470,7 +456,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		zOrderCurrent -= zOrderStepMajor;
 		element.removeFromParent();
 		element.cleanup();
-		
+
 		if (getUseToolTips()) {
 			if (getToolTipFocus() == element)
 				hideToolTip();
@@ -480,6 +466,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
+	//</editor-fold>
 	
 	/**
 	 * Returns the Element with the associated ID.  If not found, returns null
@@ -504,7 +491,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	/**
 	 * Returns the screen level elements Map
-	 * @return 
+	 * @return
 	 */
 	public Map<String, Element> getElementsAsMap() {
 		return this.elements;
@@ -512,7 +499,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	/**
 	 * Returns the screen level elements as a Collection
-	 * @return 
+	 * @return
 	 */
 	public Collection<Element> getElements() {
 		return this.elements.values();
@@ -526,12 +513,11 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public Node getGUINode() {
 		return t0neg0dGUI;
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Texture Atlas Support">
 	public void setUseTextureAtlas(boolean useTextureAtlas, String texturePath) {
 		this.useTextureAtlas = useTextureAtlas;
-		
+
 		if (texturePath != null) {
 			atlasTexture = app.getAssetManager().loadTexture(texturePath);
 			atlasTexture.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
@@ -547,7 +533,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	@Override
 	public Texture getAtlasTexture() { return atlasTexture; }
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Z-Order">
+
 	@Override
 	public Texture createNewTexture(String texturePath) {
 		Texture newTex = app.getAssetManager().loadTexture(texturePath);
@@ -560,7 +549,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	@Override
 	public float[] parseAtlasCoords(String texturePath) {
 		float[] coords = new float[4];
-		
+
 		if (texturePath != null) {
 			StringTokenizer st = new StringTokenizer(texturePath, "|");
 			if (st.countTokens() == 4) {
@@ -596,7 +585,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	}
 	//</editor-fold>
 	
-	//<editor-fold desc="Z-Order">
 	/**
 	 * Returns the next available z-order
 	 * @param stepMajor Return the z-order incremented by a major step if true, a minor step if false
@@ -613,7 +601,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	/**
 	 * Brings the element specified to the front of the zOrder list shifting other below to keep all
 	 * Elements within the current z-order range.
-	 * 
+	 *
 	 * @param topMost The Element to bring to the front
 	 */
 	@Override
@@ -621,7 +609,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	//	zOrderCurrent = zOrderInit;
 		String topMostUID = topMost.getUID();
 		float shiftZ = topMost.getLocalTranslation().getZ();
-		
+
 		for (Element el : elements.values()) {
 			if (topMost.getIsGlobalModal()) {  }
 			else if (topMost.getIsModal()) {  }
@@ -653,7 +641,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public float getZOrderStepMinor() {
 		return this.zOrderStepMinor;
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Input Handlers">
 	public void forceFocusElementRefresh() {
@@ -671,11 +658,11 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	private void setMouseXY(float x, float y) {
 		mouseXY.set(x, y).multLocal(this.inputScale);
 	}
-	
+
 	private void setTouchXY(float x, float y) {
 		touchXY.set(x, y).multLocal(this.inputScale);
 	}
-	
+
 	/**
 	 * Returns a Vector2f containing the last stored mouse X/Y coords
 	 * @return Vector2f mouseXY
@@ -684,12 +671,12 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public Vector2f getMouseXY() {
 		return this.mouseXY;
 	}
-	
+
 	@Override
 	public Vector2f getTouchXY() {
 		return this.touchXY;
 	}
-	
+
 	// Raw Input handlers
 	@Override
 	public void beginInput() {
@@ -705,7 +692,8 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public void onJoyAxisEvent(JoyAxisEvent evt) {
 	//	throw new UnsupportedOperationException("Not supported yet.");
 	}
-
+	//</editor-fold>
+	
 	@Override
 	public void onJoyButtonEvent(JoyButtonEvent evt) {
 	//	throw new UnsupportedOperationException("Not supported yet.");
@@ -713,8 +701,8 @@ public class Screen implements ElementManager, Control, RawInputListener {
 
 	@Override
 	public void onMouseMotionEvent(MouseMotionEvent evt) {
-		setMouseXY(evt.getX(),evt.getY());
-		
+		setMouseXY(evt.getX(), evt.getY());
+
 		if (this.useCursorEffects) {
 			if (app.getInputManager().isCursorVisible())
 				cursorEffects.updatePosition(mouseXY);
@@ -779,7 +767,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 			if (mouseFocusElement != null) {
 				focusElementIsMovable = mouseFocusElement.getIsMovable();
-				
+
 			}
 			if (mouseFocusElement instanceof MouseMovementListener) {
 				((MouseMovementListener)mouseFocusElement).onMouseMove(evt);
@@ -823,7 +811,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			if (currentCursor != CursorType.POINTER)
 				this.setCursor(CursorType.POINTER);
 		}
-		
+
 		// 2D Framework
 		if (mouseFocusElement == null) {
 			if (!mousePressed) {
@@ -854,7 +842,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				}
 			}
 		}
-		
+
 		if (use3DSceneSupport) {
 			s3dOnMouseMotionEvent(evt, mouseFocusElement != null || mouseFocusAnimElement != null);
 		}
@@ -1125,7 +1113,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Android Event Support">
 	public void setUseMultiTouch(boolean useMultiTouch) {
@@ -1136,8 +1123,8 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	@Override
 	public void onTouchEvent(TouchEvent evt) {
-		setTouchXY(evt.getX(),evt.getY());
-		
+		setTouchXY(evt.getX(), evt.getY());
+
 	//	evt.set(evt.getType(),touchXY.x,touchXY.y,evt.getDeltaX()*inputScale,evt.getDeltaY()*inputScale);
 		if (useMultiTouch) {
 			switch (evt.getType()) {
@@ -1156,21 +1143,24 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="SubScreen Support (OSR Collision)">
+
 	/**
 	 * This scales the current event values of deltaX and deltaY to a value between 0.0f and 1.0f
-	 * @param evt 
+	 * @param evt
 	 */
 	private void androidFlingEvent(TouchEvent evt) {
 		setTouchXY(evt.getX(),evt.getY());
 		float flingX = 1f/8000f*evt.getDeltaX();
 		float flingY = 1f/8000f*evt.getDeltaY();
 		evt.set(evt.getType(), touchXY.x, touchXY.y, flingX, flingY);
-		
+
 		Element contact = getContactElement(touchXY.x, touchXY.y, EventCheckType.Fling);
 		Vector2f offset = tempElementOffset.clone();
 		Element target = getEventElement(touchXY.x, touchXY.y, EventCheckType.Fling);
-		
+
 		if (target != null) {
 			if (target instanceof FlingListener) {
 				((FlingListener)target).onFling(evt);
@@ -1184,7 +1174,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		Element contact = getContactElement(touchXY.x, touchXY.y, EventCheckType.Touch);
 		Vector2f offset = tempElementOffset.clone();
 		Element target = getEventElement(touchXY.x, touchXY.y, EventCheckType.Touch);
-		
+
 		Borders dir = null;
 		if (target != null) {
 			if (target.getResetKeyboardFocus())
@@ -1200,7 +1190,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				float offsetX = touchXY.x;
 				float offsetY = touchXY.y;
 				Element el = target;
-				
+
 				if (offsetX > el.getAbsoluteX() && offsetX < el.getAbsoluteX()+el.getResizeBorderWestSize()) {
 					if (offsetY > el.getAbsoluteY() && offsetY < el.getAbsoluteY()+el.getResizeBorderNorthSize()) {
 						dir = Borders.NW;
@@ -1285,7 +1275,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				hideVirtualKeyboard();
 			resetTabFocusElement();
 		}
-		
+
 		if (use3DSceneSupport && !evt.isConsumed()) {
 			s3dOnTouchDownEvent(evt);
 		}
@@ -1300,7 +1290,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 					Element contact = contactElements.get(key);
 					Vector2f offset = elementOffsets.get(key);
 					Borders dir = eventElementResizeDirections.get(key);
-					
+
 					boolean movable = contact.getIsMovable();
 					if (dir != null) {
 						target.resize(touchXY.x, touchXY.y, dir);
@@ -1318,7 +1308,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				}
 			}
 		}
-		
+
 		if (use3DSceneSupport) {
 			s3dOnTouchMoveEvent(evt);
 		}
@@ -1353,16 +1343,14 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				}
 				evt.setConsumed();
 			}
-		
+
 		if (use3DSceneSupport && !evt.isConsumed()) {
 			s3dOnTouchUpEvent(evt);
 		}
-		
+
 		mousePressed = false;
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="SubScreen Support (OSR Collision)">
 	/**
 	 *  Adds an Element to the Screen and scene graph
 	 * @param element The Element to add
@@ -1400,6 +1388,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		}
 		return ret;
 	}
+	//</editor-fold>
 	
 	private void setLastCollision() {
 		if (Screen.isAndroid())
@@ -1421,7 +1410,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		Vector3f edge1 = v1.subtract(v0);
 		Vector3f edge2 = v2.subtract(v0);
 		Vector3f norm = edge1.cross(edge2);
-		
+
 		float dirDotNorm = direction.dot(norm);
 		float sign;
 		if (dirDotNorm > FastMath.FLT_EPSILON) {
@@ -1432,7 +1421,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		} else {
 			return store;
 		}
-		
+
 		float dirDotEdge1xDiff = sign * direction.dot(edge1.crossLocal(diff));
 		float dirDotDiffxEdge2 = sign * direction.dot(diff.cross(edge2, edge2));
 		float inv = 1f / dirDotNorm;
@@ -1467,7 +1456,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		);
 		uv.x *= s.getWidth();
 		uv.y *= s.getHeight();
-		
+
 		InputEvent evt = null;
 		switch (type) {
 			case 0:
@@ -1478,12 +1467,12 @@ public class Screen implements ElementManager, Control, RawInputListener {
 					((MouseMotionEvent)oldEvt).getDeltaWheel());
 				break;
 			case 1:
-				evt = new MouseButtonEvent(((MouseButtonEvent)oldEvt).getButtonIndex(), 
+				evt = new MouseButtonEvent(((MouseButtonEvent) oldEvt).getButtonIndex(),
 					((MouseButtonEvent)oldEvt).isPressed(),
 					(int)(uv.x),(int)(uv.y));
 				break;
 		}
-		
+
 		return evt;
 	}
 	
@@ -1491,7 +1480,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public CollisionResult getLastCollision() {
 		return lastCollision;
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Element Event Methods">
 	private boolean getIgnoreEvent(Element el, EventCheckType check) {
@@ -1525,14 +1513,14 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	 */
 	private Element getEventElement(float x, float y, EventCheckType check) {
 		guiRayOrigin.set(x, y, 0f);
-		
+
 		elementZOrderRay.setOrigin(guiRayOrigin);
 		results.clear();
-		
+
 		t0neg0dGUI.collideWith(elementZOrderRay, results);
-		
+
 		lastCollision = results.getClosestCollision();
-		
+
 		float z = 10;
 		Element testEl = null, el = null;
 		for (CollisionResult result : results) {
@@ -1550,14 +1538,14 @@ public class Screen implements ElementManager, Control, RawInputListener {
 					}
 				}
 			}
-			
+
 			if (!discard) {
 				if (result.getGeometry().getParent() instanceof Element) {
 					el = testEl;
 				}
 			}
 		}
-		
+
 		if (el != null) {
 			contactElement = el;
 			Element parent = null;
@@ -1608,10 +1596,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	private Element getContactElement(float x, float y, EventCheckType check) {
 		guiRayOrigin.set(x, y, 0f);
-		
+
 		elementZOrderRay.setOrigin(guiRayOrigin);
 		results.clear();
-		
+
 		t0neg0dGUI.collideWith(elementZOrderRay, results);
 
 		float z = 0;
@@ -1651,10 +1639,44 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			return el;
 		} else {
 			// 2D Framework
-			
+
 			return null;
 		}
 	}
+	/*
+	public void getAnimEventTargets(float x, float y) {
+		guiRayOrigin.set(x, y, 0f);
+		
+		elementZOrderRay.setOrigin(guiRayOrigin);
+		results.clear();
+		
+		t0neg0dGUI.collideWith(elementZOrderRay, results);
+		
+		lastCollision = results.getClosestCollision();
+		
+		eventAnimElement = null;
+		eventQuad = null;
+		for (CollisionResult result : results) {
+			boolean discard = false;
+			if (!discard) {
+				if (result.getGeometry().getParent() instanceof AnimElement) {
+					eventAnimElement = (AnimElement)result.getGeometry().getParent();
+					if (!eventAnimElement.getIgnoreMouse()) {
+						eventAnimOffsetX = x-eventAnimElement.getPositionX();
+						eventAnimOffsetY = y-eventAnimElement.getPositionY();
+						eventQuad = eventAnimElement.getQuad((int)FastMath.floor(result.getTriangleIndex()/2));
+						eventQuadOffsetX = x-eventQuad.getPositionX();
+						eventQuadOffsetY = y-eventQuad.getPositionY();
+						break;
+					} else {
+						eventAnimElement = null;
+						eventQuad = null;
+					}
+				}
+			}
+		}
+	}
+	*/
 	
 	public void forceEventElement(Element element) {
 		float x = element.getAbsoluteX()+1;
@@ -1670,7 +1692,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				float offsetX = x;
 				float offsetY = y;
 				Element el = eventElement;
-				
+
 				if (keyboardElement != null && eventElement.getResetKeyboardFocus()) {
 					if (keyboardElement instanceof TextField) ((TextField)keyboardElement).resetTabFocus();
 				}
@@ -1713,10 +1735,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	 */
 	private Element getTargetElement(float x, float y) {
 		guiRayOrigin.set(x, y, 0f);
-		
+
 		elementZOrderRay.setOrigin(guiRayOrigin);
 		results.clear();
-		
+
 		t0neg0dGUI.collideWith(elementZOrderRay, results);
 
 		float z = 0;
@@ -1737,7 +1759,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				}
 			}
 			if (!discard) {
-				
+
 				if (result.getContactPoint().getZ() > z) {
 					z = result.getContactPoint().getZ();
 					if (result.getGeometry().getParent() instanceof Element) {
@@ -1761,11 +1783,11 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			return el;
 		} else {
 			// 2D Framework
-			
+
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Returns the current Drag enabled Element
 	 * @return Element
@@ -1782,46 +1804,17 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public Element getDropElement() {
 		return this.targetElement;
 	}
-	/*
-	public void getAnimEventTargets(float x, float y) {
-		guiRayOrigin.set(x, y, 0f);
-		
-		elementZOrderRay.setOrigin(guiRayOrigin);
-		results.clear();
-		
-		t0neg0dGUI.collideWith(elementZOrderRay, results);
-		
-		lastCollision = results.getClosestCollision();
-		
-		eventAnimElement = null;
-		eventQuad = null;
-		for (CollisionResult result : results) {
-			boolean discard = false;
-			if (!discard) {
-				if (result.getGeometry().getParent() instanceof AnimElement) {
-					eventAnimElement = (AnimElement)result.getGeometry().getParent();
-					if (!eventAnimElement.getIgnoreMouse()) {
-						eventAnimOffsetX = x-eventAnimElement.getPositionX();
-						eventAnimOffsetY = y-eventAnimElement.getPositionY();
-						eventQuad = eventAnimElement.getQuad((int)FastMath.floor(result.getTriangleIndex()/2));
-						eventQuadOffsetX = x-eventQuad.getPositionX();
-						eventQuadOffsetY = y-eventQuad.getPositionY();
-						break;
-					} else {
-						eventAnimElement = null;
-						eventQuad = null;
-					}
-				}
-			}
-		}
-	}
-	*/
 	
 	public QuadData getEventQuad() {
 		return this.eventQuad;
 	}
-	
-	public float getEventQuadOffsetX() { return this.eventQuadOffsetX; }
+
+	public float getEventQuadOffsetX() { return this.eventQuadOffsetX;
+	}
+	//</editor-fold>
+
+	//<editor-fold desc="Clipboard Support">
+
 	public float getEventQuadOffsetY() { return this.eventQuadOffsetY; }
 	
 	public AnimElement getEventAnimElement() {
@@ -1829,24 +1822,12 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	}
 	
 	public float getEventAnimOffsetX() { return this.eventAnimOffsetX; }
-	public float getEventAnimOffsetY() { return this.eventAnimOffsetY; }
 	//</editor-fold>
-	
-	//<editor-fold desc="Clipboard Support">
-	/**
-	 * Sets the current stored text to the internal clipboard.  This is probably going
-	 * to vanish quickly.
-	 * @param text The text to store
-	 */
-	@Override
-	public void setClipboardText(String text) {
-		try {
-			clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			StringSelection stringSelection = new StringSelection( text );
-		//	clipboard.setContents(stringSelection, this);
-		} catch (Exception ex) {
-			this.clipboardText = text;
-		}
+
+	//<editor-fold desc="2D Framework Support">
+
+	public float getEventAnimOffsetY() {
+		return this.eventAnimOffsetY;
 	}
 	
 	/**
@@ -1874,15 +1855,30 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			return "";
 		}
 	}
-	
-//	@Override
+
+	/**
+	 * Sets the current stored text to the internal clipboard.  This is probably going
+	 * to vanish quickly.
+	 *
+	 * @param text The text to store
+	 */
+	@Override
+	public void setClipboardText(String text) {
+		try {
+			clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			StringSelection stringSelection = new StringSelection(text);
+			//	clipboard.setContents(stringSelection, this);
+		} catch (Exception ex) {
+			this.clipboardText = text;
+		}
+	}
+
+	//	@Override
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
 	//	System.out.println("Clipboard failed, switching to internal clipboard.");
 	//	this.clipboardActive = false;
 	}
-	//</editor-fold>
-	
-	//<editor-fold desc="2D Framework Support">
+
 	/**
 	 * Returns a pointer to the AnimManager.  The AnimManager is a time based queuing
 	 * for TemporalActions used with @Transformable ( See @AnimElement @QuadData )
@@ -1912,10 +1908,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				this,
 				UID
 			);
-			
+
 			layer.initZOrder(layerZOrderCurrent);
 			layerZOrderCurrent += this.getZOrderStepMajor();
-			
+
 			layers.put(UID, layer);
 			if (!layer.getInitialized()) {
 				layer.orgPosition = layer.getPosition().clone();
@@ -1923,7 +1919,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 			t0neg0dGUI.attachChild(layer);
 			t0neg0dGUI.addControl(layer);
-			
+
 			return layer;
 		}
 	}
@@ -1940,7 +1936,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		} else {
 			layer.initZOrder(layerZOrderCurrent);
 			layerZOrderCurrent += this.getZOrderStepMajor();
-			
+
 			layers.put(UID, layer);
 			if (!layer.getInitialized()) {
 				layer.orgPosition = layer.getPosition().clone();
@@ -1950,6 +1946,8 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			t0neg0dGUI.addControl(layer);
 		}
 	}
+	//</editor-fold>
+	
 	@Override
 	public AnimLayer removeAnimLayer(String UID) {
 		AnimLayer animLayer = layers.get(UID);
@@ -2003,7 +2001,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				eventAnimElement.bringQuadToFront(eventQuad);
 		}
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="3D Scene Support">
 	public void setUse3DSceneSupport(boolean enable) {
@@ -2045,6 +2042,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
+	//</editor-fold>
 	
 	private void s3dOnMouseButtonEvent(MouseButtonEvent evt) {
 		float x = Screen.isAndroid() ? touchXY.x : mouseXY.x;
@@ -2091,7 +2089,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	
+
 	private void s3dOnTouchDownEvent(TouchEvent evt) {
 		float x = Screen.isAndroid() ? touchXY.x : mouseXY.x;
 		float y = Screen.isAndroid() ? touchXY.y : mouseXY.y;
@@ -2126,7 +2124,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	
+
 	private void s3dOnTouchUpEvent(TouchEvent evt) {
 		float x = Screen.isAndroid() ? touchXY.x : mouseXY.x;
 		float y = Screen.isAndroid() ? touchXY.y : mouseXY.y;
@@ -2142,14 +2140,15 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			eventNodes.remove(evt.getPointerId());
 		}
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="JME Control Methods">
 	@Override
 	public void update(float tpf) {  }
-
+	
 	@Override
-	public void render(RenderManager rm, ViewPort vp) {  }
+	public void render(RenderManager rm, ViewPort vp) {
+	}
+	//</editor-fold>
 	
 	@Override
 	public Control cloneForSpatial(Spatial spatial) {
@@ -2157,7 +2156,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		screen.elements.putAll(this.elements);
 		return screen;
 	}
-
+	
 	@Override
 	public void setSpatial(Spatial spatial) {
 		this.spatial = spatial;
@@ -2171,13 +2170,14 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			if (isAndroid()) initVirtualKeys();
 		}
 	}
-	
+
+	//<editor-fold desc="Custom Cursor Support">
+
 	@Override
 	public void write(JmeExporter ex) throws IOException {  }
 	
 	@Override
 	public void read(JmeImporter im) throws IOException {  }
-	//</editor-fold>
 	
 	/**
 	 * Returns a pointer to the EffectManager
@@ -2197,8 +2197,18 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public Style getStyle(String key) {
 		return styleManager.getStyle(key);
 	}
-	
-	//<editor-fold desc="Custom Cursor Support">
+
+	/**
+	 * Returns true if custom cursors are currently enabled
+	 *
+	 * @return boolean
+	 */
+	@Override
+	public boolean getUseCustomCursors() {
+		return this.useCustomCursors;
+	}
+	//</editor-fold>
+
 	/**
 	 * Enables the use of Style defined custom cursors.  Initially set prior to initializing screen
 	 * @param useCustomCursors boolean
@@ -2214,17 +2224,8 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	}
 	
 	/**
-	 * Returns true if custom cursors are currently enabled
-	 * @return boolean
-	 */
-	@Override
-	public boolean getUseCustomCursors() {
-		return this.useCustomCursors;
-	}
-	
-	/**
 	 * For internal use - Use setForcedCursor instead
-	 * @param cur 
+	 * @param cur
 	 */
 	@Override
 	public void setCursor(CursorType cur) {
@@ -2280,7 +2281,20 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			el.setGlobalUIScale(widthPercent, heightPercent);
 		}
 	}
-	
+
+	/**
+	 * Returns the current value of global alpha
+	 *
+	 * @return float
+	 */
+	@Override
+	public float getGlobalAlpha() {
+		return this.globalAlpha;
+	}
+	//</editor-fold>
+
+	//<editor-fold desc="ToolTips">
+
 	/**
 	 * Sets the overall opacity of all elements that have not been flagged as ignoreGlobalAlpha(true)
 	 * @param globalAlpha float
@@ -2293,20 +2307,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		}
 	}
 	
-	/**
-	 * Returns the current value of global alpha
-	 * @return float
-	 */
-	@Override
-	public float getGlobalAlpha() {
-		return this.globalAlpha;
-	}
-	
 	@Override
 	public BitmapFont getDefaultGUIFont() {
 		return this.defaultGUIFont;
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Menu Handling">
 	private void handleMenuState() {
@@ -2340,7 +2344,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	
+
 	@Override
 	public void handleAndroidMenuState(Element target) {
 		if (target == null) {
@@ -2371,9 +2375,17 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	//</editor-fold>
-	
-	//<editor-fold desc="ToolTips">
+
+	/**
+	 * Returns if ToolTips are enabled/disabled
+	 *
+	 * @return boolean
+	 */
+	@Override
+	public boolean getUseToolTips() {
+		return useToolTips;
+	}
+
 	/**
 	 * Enables/disables the use of ToolTips
 	 * @param useToolTips boolean
@@ -2407,15 +2419,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		*/
 		this.useToolTips = useToolTips;
 		updateToolTipLocation();
-	}
-	
-	/**
-	 * Returns if ToolTips are enabled/disabled
-	 * @return boolean
-	 */
-	@Override
-	public boolean getUseToolTips() {
-		return useToolTips;
 	}
 	
 	/**
@@ -2457,7 +2460,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			toolTip.hide();
 			return;
 		}
-		
+
 		String oldText = toolTip.getText();
 		if (!oldText.equals(newText)) {
 			/*
@@ -2477,7 +2480,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			toolTip.show();
 		}
 	}
-
+	
 	private void setToolTipLocation() {
 		float nextX = (Screen.isAndroid()) ? touchXY.x-(toolTip.getWidth()/2) : mouseXY.x-(toolTip.getWidth()/2);
 		if (nextX < 0) nextX = 0;
@@ -2491,7 +2494,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		forcedToolTipText = toolTipText;
 		updateToolTipLocation();
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Audio Support">
+
 	public void releaseForcedToolTip() {
 		setForcedToolTip(null);
 	}
@@ -2510,9 +2516,20 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		toolTip.setText(" ");
 		toolTip.hide();
 	}
+
+	/**
+	 * Returns if the UI Audio option is enabled/disabled
+	 *
+	 * @return boolean
+	 */
+	@Override
+	public boolean getUseUIAudio() {
+		return this.useUIAudio;
+	}
 	//</editor-fold>
-	
-	//<editor-fold desc="Audio Support">
+
+	//<editor-fold desc="Cursor Effects">
+
 	/**
 	 * Enables/disables UI Audio
 	 * @param useUIAudio boolean
@@ -2521,16 +2538,18 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public void setUseUIAudio(boolean useUIAudio) {
 		this.useUIAudio = useUIAudio;
 	}
-	
+
 	/**
-	 * Returns if the UI Audio option is enabled/disabled
-	 * @return boolean
+	 * Gets the current global UI Audio volume
+	 * @return float
 	 */
-	@Override
-	public boolean getUseUIAudio() {
-		return this.useUIAudio;
+	public float getUIAudioVolume() {
+		return this.uiAudioVolume;
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Forms & Tab Focus">
+
 	/**
 	 * Sets the global UI Audio volume
 	 * @param uiAudioVolume float
@@ -2538,14 +2557,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	@Override
 	public void setUIAudioVolume(float uiAudioVolume) {
 		this.uiAudioVolume = uiAudioVolume;
-	}
-	
-	/**
-	 * Gets the current global UI Audio volume
-	 * @return float
-	 */
-	public float getUIAudioVolume() {
-		return this.uiAudioVolume;
 	}
 	
 	/**
@@ -2560,9 +2571,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			audioNode.playInstance();
 		}
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Cursor Effects">
 	/**
 	 * Enables/disables the use of Cursor effects
 	 * @param useCursorEffects boolean
@@ -2574,7 +2583,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		//	cursorEffects.setTheme(CursorEffects.EmitterTheme.FLAMES);
 		}
 		this.useCursorEffects = useCursorEffects;
-		
+
 		if (useCursorEffects) {
 			if (!cursorEffects.getIsActive()) {
 				cursorEffects.getEmitter().removeAllParticles();
@@ -2588,15 +2597,31 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	/**
 	 * Returns the cursor effects manager
-	 * @return 
+	 * @return
 	 */
 	@Override
 	public CursorEffects getCursorEffects() {
 		return this.cursorEffects;
 	}
+
+	/**
+	 * Resets the tab focus element to null after calling the TabFocusListener's
+	 * resetTabFocus method.
+	 */
+	@Override
+	public void resetTabFocusElement() {
+		resetFocusElement();
+		this.tabFocusElement = null;
+		this.focusForm = null;
+	}
 	//</editor-fold>
+
+	/**
+	 * Returns the current tab focus element
+	 */
+	public Element getTabFocusElement() {
+		return this.tabFocusElement; }
 	
-	//<editor-fold desc="Forms & Tab Focus">
 	/**
 	 * Method for setting the tab focus element
 	 * @param element The Element to set tab focus to
@@ -2615,22 +2640,6 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			}
 		}
 	}
-	
-	/**
-	 * Resets the tab focus element to null after calling the TabFocusListener's
-	 * resetTabFocus method.
-	 */
-	@Override
-	public void resetTabFocusElement() {
-		resetFocusElement();
-		this.tabFocusElement = null;
-		this.focusForm = null;
-	}
-	
-	/**
-	 * Returns the current tab focus element
-	 */
-	public Element getTabFocusElement() { return this.tabFocusElement; }
 	
 	/**
 	 * Send reset to the current Tab Focus Element
@@ -2657,12 +2666,12 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		} else
 			keyboardElement = null;
 	}
-	//</editor-fold>
 	
 	// Layout Parser
 	public void parseLayout(String path, AbstractAppState state) {
 		layoutParser.parseLayout(path, state);
 	}
+	//</editor-fold>
 	
 	//<editor-fold desc="Modal Background">
 	@Override
@@ -2691,13 +2700,13 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public void hideModalBackground() {
 		modalBackground.hide();
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Android Keyboard Control">
 	public void setUseKeyboardIcons(boolean useIcons) {
 		if (Screen.isAndroid())
 			virtualKeys.setUseIcons(useIcons);
 	}
+	//</editor-fold>
 	
 	private void initVirtualKeys() {
 		virtualKeys = new Keyboard(this);
@@ -2706,53 +2715,30 @@ public class Screen implements ElementManager, Control, RawInputListener {
 		addElement(virtualKeys);
 		virtualKeys.hide();
 	}
-	
+
 	public Keyboard getVirtualKeyboard() {
 		if (isAndroid())	return virtualKeys;
 		else				return null;
 	}
-	
+
 	@Override
 	public void showVirtualKeyboard() {
 		if (isAndroid()) virtualKeys.show();
 	}
+	//</editor-fold>
 	
 	@Override
 	public void hideVirtualKeyboard() {
 		if (isAndroid()) virtualKeys.hide();
 	}
-	//</editor-fold>
-	
+
 	//<editor-fold desc="Keyboard Key States">
 	public boolean getCtrl() { return this.CTRL; }
+
 	public boolean getShift() { return this.SHIFT; }
+
 	public boolean getAlt() { return this.ALT; }
-	//</editor-fold>
-	
-	//<editor-fold desc="OS Helpers">
-	public static boolean isWindows() {
-		String OS = System.getProperty("os.name").toLowerCase();
-		return (OS.indexOf("win") >= 0);
-	}
-	public static boolean isMac() {
- 		String OS = System.getProperty("os.name").toLowerCase();
-		return (OS.indexOf("mac") >= 0);
-	}
-	public static boolean isUnix() {
-		String OS = System.getProperty("os.name").toLowerCase();
-		return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0 );
-	}
-	public static boolean isSolaris() {
-		String OS = System.getProperty("os.name").toLowerCase();
-		return (OS.indexOf("sunos") >= 0);
-	}
-	public static boolean isAndroid() {
-		String OS = System.getProperty("java.vendor").toLowerCase();
-		return (OS.indexOf("android") >= 0);
-	}
-	//</editor-fold>
-	
-	//<editor-fold desc="Node Event Methods">
+
 	/**
 	 * Determines and returns the current mouse focus Node
 	 * @param x The current mouse X coord
@@ -2762,7 +2748,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	public void addScene(Node scene) {
 		scenes.add(scene);
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Node Event Methods">
+
 	public void removeScene(Node scene) {
 		if (scenes.contains(scene))
 			scenes.remove(scene);
@@ -2770,10 +2759,10 @@ public class Screen implements ElementManager, Control, RawInputListener {
 	
 	private Node getEventNode(float x, float y) {
 		Node testEl = null, el = null;
-		
+
 		for (ViewPort vp : app.getRenderManager().getMainViews()) {
 			Node root = (Node)vp.getScenes().get(0);
-			
+
 			if (!Screen.isAndroid())
 				click2d.set(app.getInputManager().getCursorPosition());
 			else
@@ -2787,7 +2776,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 			root.collideWith(pickRay, results);
 
 			boolean listener = false;
-			
+
 			for (CollisionResult result : results) {
 				Node parent = result.getGeometry().getParent();
 				while (parent != root && listener == false) {
@@ -2805,15 +2794,27 @@ public class Screen implements ElementManager, Control, RawInputListener {
 				if (listener)
 					break;
 			}
-			
+
 			if (testEl != null)
 				el = testEl;
 		}
-		
+
 		if (el != null)
 			return el;
 		else
 			return null;
+	}
+
+	private enum EventCheckType {
+		MouseLeft,
+		MouseRight,
+		MouseFocus,
+		WheelClick,
+		WheelMove,
+		Touch,
+		TouchMove,
+		Fling,
+		None
 	}
 	//</editor-fold>
 }

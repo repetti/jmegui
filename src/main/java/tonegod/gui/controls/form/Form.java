@@ -4,24 +4,24 @@
  */
 package tonegod.gui.controls.form;
 
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author t0neg0d
  */
 public class Form {
+	List<Character> gbSpecialCharacters;
+	List<Character> gbNumeric;
+	List<Character> gbAlpha;
 	private ElementManager screen;
 	private List<Element> elements = new ArrayList();
 	private int nextIndex = 0;
 	private int currentTabIndex = 0;
-	
-	List<Character> gbSpecialCharacters;
-	List<Character> gbNumeric;
-	List<Character> gbAlpha;
 	
 	public Form(ElementManager screen) {
 		this.screen = screen;

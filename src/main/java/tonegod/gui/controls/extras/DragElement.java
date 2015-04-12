@@ -9,8 +9,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
-import tonegod.gui.core.Screen;
-import tonegod.gui.core.SubScreen;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
 import tonegod.gui.listeners.MouseButtonListener;
@@ -64,6 +62,14 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 	
 	/**
+	 * Returns if the DragElement is current enabled/disabled
+	 * @return boolean isEnabled
+	 */
+	public boolean getIsEnabled() {
+		return this.isEnabled;
+	}
+
+	/**
 	 * Enables/disables the DragElement
 	 * @param isEnabled boolean
 	 */
@@ -76,11 +82,11 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 	
 	/**
-	 * Returns if the DragElement is current enabled/disabled
-	 * @return boolean isEnabled
+	 * Returns if the DragElement should center itself within the drop element
+	 * @return boolean
 	 */
-	public boolean getIsEnabled() {
-		return this.isEnabled;
+	public boolean getUseLockToDropElementCenter() {
+		return this.lockToDropElementCenter;
 	}
 	
 	/**
@@ -92,11 +98,11 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 	
 	/**
-	 * Returns if the DragElement should center itself within the drop element
-	 * @return boolean
+	 * Returns if the SlideTo Effect is enabled/disabled when centering within a drop element
+	 * @return
 	 */
-	public boolean getUseLockToDropElementCenter() {
-		return this.lockToDropElementCenter;
+	public boolean getUseLockToDropElementEffect() {
+		return this.useLockToDropElementEffect;
 	}
 	
 	/**
@@ -108,11 +114,11 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 	
 	/**
-	 * Returns if the SlideTo Effect is enabled/disabled when centering within a drop element
-	 * @return 
+	 * Returns if springback is enabled for springback to original position when dropped outside of a valid drop element
+	 * @return boolean
 	 */
-	public boolean getUseLockToDropElementEffect() {
-		return this.useLockToDropElementEffect;
+	public boolean getUseSpringBack() {
+		return this.useSpringBack;
 	}
 	
 	/**
@@ -124,11 +130,11 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 	
 	/**
-	 * Returns if springback is enabled for springback to original position when dropped outside of a valid drop element
+	 * Returns if SpringBack Effects are enabled/disabled
 	 * @return boolean
 	 */
-	public boolean getUseSpringBack() {
-		return this.useSpringBack;
+	public boolean getUseSpringBackEffect() {
+		return this.useSpringBackEffect;
 	}
 	
 	/**
@@ -137,14 +143,6 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	 */
 	public void setUseSpringBackEffect(boolean useSpringBackEffect) {
 		this.useSpringBackEffect = useSpringBackEffect;
-	}
-	
-	/**
-	 * Returns if SpringBack Effects are enabled/disabled
-	 * @return boolean
-	 */
-	public boolean getUseSpringBackEffect() {
-		return this.useSpringBackEffect;
 	}
 	
 	public Element getParentDroppable() {

@@ -12,11 +12,12 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -179,15 +180,15 @@ public class SpriteElement extends Element implements Control {
 		
 		setIsEnabled(true);
 	}
+
+	public boolean getIsEnabled() {
+		return this.isEnabled;
+	}
 	
 	public void setIsEnabled(boolean isEnabled) {
 		this.isEnabled = isEnabled;
 		if (isEnabled)	this.addControl(this);
 		else			this.removeControl(this);
-	}
-	
-	public boolean getIsEnabled() {
-		return this.isEnabled;
 	}
 	
 	public int getSpriteRowCount() { return this.spriteRows; }

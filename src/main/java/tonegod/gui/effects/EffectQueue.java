@@ -88,36 +88,36 @@ public class EffectQueue {
 			}
 		}
 	}
+
+	public void setEffectManager(EffectManager effectManager) {
+		this.effectManager = effectManager;
+	}
 	
 	public class EffectQueueItem {
 		private Effect effect = null;
 		private BatchEffect batchEffect = null;
 		private float delay;
-		
+
 		public EffectQueueItem(Effect effect, float delay) {
 			this.effect = effect;
 			this.delay = delay;
 		}
-		
+
 		public EffectQueueItem(BatchEffect batchEffect, float delay) {
 			this.batchEffect = batchEffect;
 			this.delay = delay;
 		}
-		
+
 		public Effect getEffect() {
 			return this.effect;
 		}
-		
+
 		public BatchEffect getBatchEffect() {
 			return this.batchEffect;
 		}
-		
+
 		public float getDelay() {
 			return this.delay;
 		}
-	}
-	
-	public void setEffectManager(EffectManager effectManager) {
-		this.effectManager = effectManager;
 	}
 }

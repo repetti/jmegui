@@ -8,15 +8,7 @@ import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
-import tonegod.gui.controls.extras.emitter.AlphaInfluencer;
-import tonegod.gui.controls.extras.emitter.ColorInfluencer;
-import tonegod.gui.controls.extras.emitter.DirectionInfluencer;
-import tonegod.gui.controls.extras.emitter.ElementEmitter;
-import tonegod.gui.controls.extras.emitter.GravityInfluencer;
-import tonegod.gui.controls.extras.emitter.ImpulseInfluencer;
-import tonegod.gui.controls.extras.emitter.RotationInfluencer;
-import tonegod.gui.controls.extras.emitter.SizeInfluencer;
-import tonegod.gui.controls.extras.emitter.SpriteInfluencer;
+import tonegod.gui.controls.extras.emitter.*;
 import tonegod.gui.core.Screen;
 import tonegod.gui.framework.animation.Interpolation;
 
@@ -25,17 +17,6 @@ import tonegod.gui.framework.animation.Interpolation;
  * @author t0neg0d
  */
 public class CursorEffects {
-	public static enum EmitterConfig {
-		DEFAULT,
-		LEFT_CLICK,
-		WHEEL_CLICK,
-		RIGHT_CLICK
-	}
-	public static enum EmitterTheme {
-		SPARKS,
-		FLAMES,
-		OOZE
-	}
 	private Screen screen;
 	private Application app;
 	private ElementEmitter cursorEmitter;
@@ -45,18 +26,17 @@ public class CursorEffects {
 	private CursorEffectSettings wheelClickSettings = new CursorEffectSettings();
 	private CursorEffectSettings rightClickSettings = new CursorEffectSettings();
 	private boolean isActive = false;
-	
 	public CursorEffects(Screen screen) {
 		this.screen = screen;
 		this.app = screen.getApplication();
-		
+
 		cursorEmitter = new ElementEmitter(screen,new Vector2f(screen.getWidth()/2-200,screen.getHeight()/2),2,2);
 		cursorEmitter.setSprite("tonegod/gui/style/def/Common/Particles/core.png", 3, 3, 8);
 		cursorEmitter.setMaxParticles(60);
 		this.setTheme(EmitterTheme.SPARKS);
-		
+
 	}
-	
+
 	public void updatePosition(Vector2f position) {
 		cursorEmitter.setPosition(position);
 	}
@@ -257,6 +237,19 @@ public class CursorEffects {
 				cursorEmitter.setUseFixedDirection(false, Vector2f.ZERO);
 				break;
 		}
+	}
+
+	public static enum EmitterConfig {
+		DEFAULT,
+		LEFT_CLICK,
+		WHEEL_CLICK,
+		RIGHT_CLICK
+	}
+
+	public static enum EmitterTheme {
+		SPARKS,
+		FLAMES,
+		OOZE
 	}
 	
 	private class CursorEffectSettings {

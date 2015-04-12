@@ -4,7 +4,6 @@
  */
 package tonegod.gui.core;
 
-import tonegod.gui.style.Style;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapFont;
@@ -16,11 +15,12 @@ import com.jme3.scene.Node;
 import com.jme3.texture.Texture;
 import tonegod.gui.controls.util.ModalBackground;
 import tonegod.gui.core.utils.ScaleUtil;
-import tonegod.gui.style.StyleManager.CursorType;
 import tonegod.gui.effects.EffectManager;
 import tonegod.gui.effects.cursor.CursorEffects;
 import tonegod.gui.framework.core.AnimLayer;
 import tonegod.gui.framework.core.AnimManager;
+import tonegod.gui.style.Style;
+import tonegod.gui.style.StyleManager.CursorType;
 
 /**
  *
@@ -51,15 +51,19 @@ public interface ElementManager {
 	public void updateZOrder(Element element);
 	
 	public Style getStyle(String key);
-	public void setClipboardText(String text);
+
 	public String getClipboardText();
+
+	public void setClipboardText(String text);
 	
 	public boolean getUseTextureAtlas();
 	public float[] parseAtlasCoords(String coords);
 	public Texture getAtlasTexture();
 	public Texture createNewTexture(String texturePath);
-	public void setGlobalAlpha(float alpha);
+
 	public float getGlobalAlpha();
+
+	public void setGlobalAlpha(float alpha);
 	
 	public ScaleUtil getScaleManager();
 	public float scaleFloat(float in);
@@ -82,8 +86,10 @@ public interface ElementManager {
 	public Element getToolTipFocus();
 	public void hideToolTip();
 	
-	public void setUseCustomCursors(boolean use);
 	public boolean getUseCustomCursors();
+
+	public void setUseCustomCursors(boolean use);
+
 	public void setCursor(CursorType cursorType);
 	public void setUseCursorEffects(boolean use);
 	public CursorEffects getCursorEffects();

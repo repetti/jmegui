@@ -4,12 +4,8 @@
  */
 package tonegod.gui.core.layouts;
 
-import com.jme3.math.Vector2f;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
-import tonegod.gui.core.layouts.LayoutHint.SizeUnit;
-import static tonegod.gui.core.layouts.LayoutHint.SizeUnit.fill;
-import static tonegod.gui.core.layouts.LayoutHint.SizeUnit.percent;
 
 /**
  *

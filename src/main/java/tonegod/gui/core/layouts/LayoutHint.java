@@ -13,55 +13,16 @@ import java.util.StringTokenizer;
  * @author t0neg0d
  */
 public class LayoutHint {
-	public static enum ParamType {
-		wrap,
-		split,
-		span,
-		cell,
-		pad,
-		margin,
-		size,
-		fill,
-		width,
-		height,
-		align,
-		valign,
-		dock,
-		grow,
-		min,
-		max,
-		pref
-	}
-	public static enum Unit {
-		Boolean,
-		Float,
-		Integer,
-		Align,
-		VAlign
-	}
-	public static enum SizeUnit {
-		absolute,
-		percent,
-		fill
-	}
-	public static enum Align {
-		left, center, right
-	}
-	public static enum VAlign {
-		top, center, bottom
-	}
-	
 	public ParamType type = null;
 	public Map<String,Value> values = new HashMap();
-	
 	public LayoutHint(String param) {
 		StringTokenizer st = new StringTokenizer(param, " ");
 		String name = st.nextToken().toLowerCase();
-		
+
 		getHintType(name);
 		parseHintValues(st);
 	}
-	
+
 	private void getHintType(String name) {
 		if (name.indexOf("pad") != -1 || name.indexOf("inset") != -1)
 			type = ParamType.pad;
@@ -88,7 +49,7 @@ public class LayoutHint {
 		else
 			type = ParamType.valueOf(name);
 	}
-	
+
 	private void parseHintValues(StringTokenizer st) {
 		if (type != null) {
 			switch(type) {
@@ -134,13 +95,13 @@ public class LayoutHint {
 					values.put("y",new Value(Unit.Float, SizeUnit.absolute, Float.parseFloat(st.nextToken())));
 					break;
 				case width:
-					
+
 					break;
 				case height:
-					
+
 					break;
 				case size:
-					
+
 					break;
 				default:
 					while (st.hasMoreTokens()) {
@@ -152,7 +113,50 @@ public class LayoutHint {
 	}
 	
 	public ParamType getType() { return this.type; }
+
 	public Map<String,Value> getValues() { return this.values; }
+
+	public static enum ParamType {
+		wrap,
+		split,
+		span,
+		cell,
+		pad,
+		margin,
+		size,
+		fill,
+		width,
+		height,
+		align,
+		valign,
+		dock,
+		grow,
+		min,
+		max,
+		pref
+	}
+
+	public static enum Unit {
+		Boolean,
+		Float,
+		Integer,
+		Align,
+		VAlign
+	}
+
+	public static enum SizeUnit {
+		absolute,
+		percent,
+		fill
+	}
+
+	public static enum Align {
+		left, center, right
+	}
+
+	public static enum VAlign {
+		top, center, bottom
+	}
 	
 	public class Value<T> {
 		public Unit unit;

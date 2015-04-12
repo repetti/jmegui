@@ -12,10 +12,9 @@ import java.util.List;
  * @author t0neg0d
  */
 public class BatchEffect {
+	List<Effect> effects = new ArrayList();
 	private boolean isActive = true;
 	private EffectManager effectManager;
-	
-	List<Effect> effects = new ArrayList();
 	
 	public BatchEffect() {
 		

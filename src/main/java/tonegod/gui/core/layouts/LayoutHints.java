@@ -4,9 +4,10 @@
  */
 package tonegod.gui.core.layouts;
 
+import tonegod.gui.core.layouts.LayoutHint.Value;
+
 import java.util.HashMap;
 import java.util.Map;
-import tonegod.gui.core.layouts.LayoutHint.Value;
 
 /**
  *

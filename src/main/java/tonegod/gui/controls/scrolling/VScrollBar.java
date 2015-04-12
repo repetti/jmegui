@@ -256,6 +256,14 @@ public class VScrollBar extends Element {
 	}
 	
 	/**
+	 * Returns the increment value used when scrolling by arrow button click
+	 * @return int
+	 */
+	public int getButtonInc() {
+		return this.btnInc;
+	}
+
+	/**
 	 * Sets the increment value used when scrolling by arrow button click
 	 * @param btnInc int
 	 */
@@ -264,11 +272,11 @@ public class VScrollBar extends Element {
 	}
 	
 	/**
-	 * Returns the increment value used when scrolling by arrow button click
+	 * Returns the increment used when scrolling by track click
 	 * @return int
 	 */
-	public int getButtonInc() {
-		return this.btnInc;
+	public int getTrackInc() {
+		return this.trackInc;
 	}
 	
 	/**
@@ -277,14 +285,6 @@ public class VScrollBar extends Element {
 	 */
 	public void setTrackInc(int trackInc) {
 		this.trackInc = trackInc;
-	}
-	
-	/**
-	 * Returns the increment used when scrolling by track click
-	 * @return int
-	 */
-	public int getTrackInc() {
-		return this.trackInc;
 	}
 	
 	/**

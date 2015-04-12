@@ -11,11 +11,6 @@ import com.jme3.math.FastMath;
  * @author Nathan Sweet
  */
 public abstract class Interpolation {
-	abstract public float apply (float a);
-	public float apply (float start, float end, float a) {
-		return start + (end - start) * apply(a);
-	}
-
 	public static final Interpolation linear = new Interpolation() {
 		@Override
 		public float apply (float a) {
@@ -98,6 +93,12 @@ public abstract class Interpolation {
 	public static final Pow pow5 = new Pow(5);
 	public static final PowIn pow5In = new PowIn(5);
 	public static final PowOut pow5Out = new PowOut(5);
+
+	abstract public float apply(float a);
+
+	public float apply(float start, float end, float a) {
+		return start + (end - start) * apply(a);
+	}
 	
 	public static class Pow extends Interpolation {
 		final int power;

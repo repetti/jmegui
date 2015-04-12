@@ -6,7 +6,6 @@ package tonegod.gui.controls.extras.emitter;
 
 import com.jme3.math.FastMath;
 import tonegod.gui.controls.extras.emitter.ElementEmitter.ElementParticle;
-import tonegod.gui.framework.core.AnimElement;
 import tonegod.gui.framework.core.TextureRegion;
 
 /**
@@ -14,18 +13,6 @@ import tonegod.gui.framework.core.TextureRegion;
  * @author t0neg0d
  */
 public class SpriteInfluencer extends InfluencerBase {
-	public static enum AnimOrder {
-		SequentialAll,
-		SequentialAllOverLife,
-		SequentialDefinedOrder,
-		SequentialDefinedOrderOverLife,
-		RandomAll,
-		RandomAllOverLife,
-		RandomDefinedOrder,
-		RandomDefinedOrderOverLife,
-		SingleImage
-	}
-	
 	private boolean isEnabled = true;
 	private boolean randomStartImage = false;
 	private AnimOrder animOrder = AnimOrder.SingleImage;
@@ -35,7 +22,6 @@ public class SpriteInfluencer extends InfluencerBase {
 	private float targetInterval = 1f;
 	private float currentInterval = 0f;
 	private float fps = 4f;
-	
 	public SpriteInfluencer(ElementEmitter emitter) {
 		super(emitter);
 	}
@@ -154,15 +140,15 @@ public class SpriteInfluencer extends InfluencerBase {
 	}
 
 	@Override
+	public boolean getIsEnabled() {
+		return this.isEnabled;
+	}
+
+	@Override
 	public void setIsEnabled(boolean isEnabled) {
 		this.isEnabled = isEnabled;
 	}
 
-	@Override
-	public boolean getIsEnabled() {
-		return this.isEnabled;
-	}
-	
 	private TextureRegion getRandomSprite(ElementParticle particle) {
 		currentIndex = FastMath.nextRandomInt(0, emitter.particles.getTextureRegions().size()-1);
 		particle.putData("currentIndex", currentIndex);
@@ -199,7 +185,7 @@ public class SpriteInfluencer extends InfluencerBase {
 		this.spriteOrder = spriteOrder;
 		this.spriteOrderSet = true;
 	}
-	
+
 	public void setTargetFPS(int fps) {
 		this.fps = (float)fps;
 	}
@@ -213,5 +199,17 @@ public class SpriteInfluencer extends InfluencerBase {
 		clone.setTargetFPS((int)fps);
 		clone.setIsEnabled(isEnabled);
 		return clone;
+	}
+
+	public static enum AnimOrder {
+		SequentialAll,
+		SequentialAllOverLife,
+		SequentialDefinedOrder,
+		SequentialDefinedOrderOverLife,
+		RandomAll,
+		RandomAllOverLife,
+		RandomDefinedOrder,
+		RandomDefinedOrderOverLife,
+		SingleImage
 	}
 }

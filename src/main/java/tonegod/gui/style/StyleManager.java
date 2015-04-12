@@ -13,10 +13,6 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -25,39 +21,22 @@ import tonegod.gui.core.Screen;
 import tonegod.gui.core.utils.XMLHelper;
 import tonegod.gui.effects.Effect;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  *
  * @author t0neg0d
  */
 public class StyleManager {
-	public static enum CursorType {
-		POINTER,
-		HAND,
-		MOVE,
-		TEXT,
-		WAIT,
-		RESIZE_CNW,
-		RESIZE_CNE,
-		RESIZE_NS,
-		RESIZE_EW,
-		CUSTOM_0,
-		CUSTOM_1,
-		CUSTOM_2,
-		CUSTOM_3,
-		CUSTOM_4,
-		CUSTOM_5,
-		CUSTOM_6,
-		CUSTOM_7,
-		CUSTOM_8,
-		CUSTOM_9
-	}
 	Screen screen;
 	Application app;
 	private Map<String, Style> styles = new HashMap();
 	private Map<CursorType, JmeCursor> cursors = new HashMap();
 	private Map<String, AudioNode> audioNodes = new HashMap();
 	private String styleMap;
-	
 	public StyleManager(Screen screen, String styleMap) {
 		this.screen = screen;
 		this.app = screen.getApplication();
@@ -77,7 +56,7 @@ public class StyleManager {
 				throw new AssetNotFoundException(String.format("Could not find style %s", path));
 			}
 			NodeList nodeLst = doc.getElementsByTagName("cursors");
-			
+
 			for (int s = 0; s < nodeLst.getLength(); s++) {
 				Node fstNode = nodeLst.item(0);
 				if (fstNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -85,17 +64,17 @@ public class StyleManager {
 					docPaths.add(cursorDocPath);
 				}
 			}
-			
+
 			parseCursors(docPaths);
 			docPaths.clear();
-			
+
 			// Audio nodes
 			doc = app.getAssetManager().loadAsset(new AssetKey<Document>(path));
 			if (doc == null) {
 				throw new AssetNotFoundException(String.format("Could not find style %s", path));
 			}
 			nodeLst = doc.getElementsByTagName("audio");
-			
+
 			for (int s = 0; s < nodeLst.getLength(); s++) {
 				Node fstNode = nodeLst.item(0);
 				if (fstNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -103,17 +82,17 @@ public class StyleManager {
 					docPaths.add(audioDocPath);
 				}
 			}
-			
+
 			parseAudios(docPaths);
 			docPaths.clear();
-			
+
 			// Control style definitions
 			doc = app.getAssetManager().loadAsset(new AssetKey<Document>(path));
 			if (doc == null) {
 				throw new AssetNotFoundException(String.format("Could not find style %s", path));
 			}
 			nodeLst = doc.getElementsByTagName("style");
-			
+
 			for (int s = 0; s < nodeLst.getLength(); s++) {
 				Node fstNode = nodeLst.item(s);
 				if (fstNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -121,7 +100,7 @@ public class StyleManager {
 					docPaths.add(styleDocPath);
 				}
 			}
-			
+
 			parseStyleDefs(docPaths);
 			docPaths.clear();
 			docPaths = null;
@@ -146,7 +125,7 @@ public class StyleManager {
 						Element fstElmnt = (Element) fstNode;
 						String key = XMLHelper.getNodeAttributeValue(fstNode, "type");
 						String curPath = XMLHelper.getNodeAttributeValue(fstNode, "path");
-						
+
 						JmeCursor jmeCursor = (JmeCursor)app.getAssetManager().loadAsset(curPath);//new JmeCursor();
 						try {
 							int hsX = Integer.valueOf(XMLHelper.getNodeAttributeValue(fstNode, "x"));
@@ -154,9 +133,9 @@ public class StyleManager {
 							jmeCursor.setxHotSpot(hsX);
 							jmeCursor.setyHotSpot(hsY);
 						} catch (Exception npe) {  }
-						
+
 						cursors.put(
-							CursorType.valueOf(key), 
+								CursorType.valueOf(key),
 							(JmeCursor)app.getAssetManager().loadAsset(curPath)
 						);
 					}
@@ -360,5 +339,27 @@ public class StyleManager {
 	
 	public JmeCursor getCursor(CursorType cursorType) {
 		return this.cursors.get(cursorType);
+	}
+
+	public static enum CursorType {
+		POINTER,
+		HAND,
+		MOVE,
+		TEXT,
+		WAIT,
+		RESIZE_CNW,
+		RESIZE_CNE,
+		RESIZE_NS,
+		RESIZE_EW,
+		CUSTOM_0,
+		CUSTOM_1,
+		CUSTOM_2,
+		CUSTOM_3,
+		CUSTOM_4,
+		CUSTOM_5,
+		CUSTOM_6,
+		CUSTOM_7,
+		CUSTOM_8,
+		CUSTOM_9
 	}
 }

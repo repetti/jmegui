@@ -11,8 +11,6 @@ import com.jme3.math.Vector4f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.texture.Texture;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
@@ -20,14 +18,16 @@ import tonegod.gui.core.ElementQuadGrid;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class Dial extends ButtonAdapter {
-	Element elCenter, elPosition, elIndicator;
 	protected List<Object> stepValues = new ArrayList();
-	
+	Element elCenter, elPosition, elIndicator;
 	int selectedIndex = 0;
 	boolean isStepped = false;
 	float stepSize = 1;
@@ -361,27 +361,6 @@ public abstract class Dial extends ButtonAdapter {
 	 * For use with free-floating Dials - Sets the selected index of the Dial
 	 * @param index float A range from 0.0 to 100.0 for a more accurate representation of the angle desired
 	 */
-	public void setSelectedIndex(float index) {
-		float angle;
-		int index1 = (int)Math.round(index);
-		if (isStepped) {
-			if (index1 < 0) index1 = 0;
-			else if (index1 > stepValues.size()-1) index1 = stepValues.size()-1;
-			this.selectedIndex = index1;
-			angle = index1*stepSize-180+startGap;
-		} else {
-			if (index1 < 0) index1 = 0;
-			else if (index1 > 100) index1 = 100;
-			this.selectedIndex = index1;
-			angle = index*stepSize-180+startGap;
-		}
-		elCenter.setLocalRotation(elCenter.getLocalRotation().fromAngleAxis(-(angle*FastMath.DEG_TO_RAD), Vector3f.UNIT_Z));
-	}
-	
-	/**
-	 * For use with free-floating Dials - Sets the selected index of the Dial
-	 * @param index float A range from 0.0 to 100.0 for a more accurate representation of the angle desired
-	 */
 	public void setSelectedIndexWithCallback(float index) {
 		float angle;
 		int index1 = (int)Math.round(index);
@@ -401,11 +380,32 @@ public abstract class Dial extends ButtonAdapter {
 	
 	/**
 	 * Returns the text value of the current selected step.
-	 * 
+	 *
 	 * @return String stepValue
 	 */
 	public int getSelectedIndex() {
 		return selectedIndex;
+	}
+
+	/**
+	 * For use with free-floating Dials - Sets the selected index of the Dial
+	 * @param index float A range from 0.0 to 100.0 for a more accurate representation of the angle desired
+	 */
+	public void setSelectedIndex(float index) {
+		float angle;
+		int index1 = (int)Math.round(index);
+		if (isStepped) {
+			if (index1 < 0) index1 = 0;
+			else if (index1 > stepValues.size()-1) index1 = stepValues.size()-1;
+			this.selectedIndex = index1;
+			angle = index1*stepSize-180+startGap;
+		} else {
+			if (index1 < 0) index1 = 0;
+			else if (index1 > 100) index1 = 100;
+			this.selectedIndex = index1;
+			angle = index*stepSize-180+startGap;
+		}
+		elCenter.setLocalRotation(elCenter.getLocalRotation().fromAngleAxis(-(angle*FastMath.DEG_TO_RAD), Vector3f.UNIT_Z));
 	}
 	
 	/**

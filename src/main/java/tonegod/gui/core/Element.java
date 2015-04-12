@@ -11,26 +11,21 @@ import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.texture.Texture;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import tonegod.gui.controls.extras.DragElement;
 import tonegod.gui.controls.form.Form;
 import tonegod.gui.core.layouts.Layout;
 import tonegod.gui.core.layouts.LayoutHints;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
+
+import java.text.ParseException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>
@@ -52,63 +47,46 @@ import tonegod.gui.effects.Effect;
  * @author t0neg0d
  */
 public class Element extends Node {
-	public static enum Borders {
-		NW,
-		N,
-		NE,
-		W,
-		E,
-		SW,
-		S,
-		SE;
-	};
-	/**
-	 * Some controls provide different layout's based on the orientation of the control
-	 */
-	public static enum Orientation {
-		/**
-		 * Vertical layout
-		 */
-		VERTICAL,
-		/**
-		 * Horizontal layout
-		 */
-		HORIZONTAL
-	}
-	/**
-	 * Defines how the element will dock to it's parent element during resize events
-	 */
-	public static enum Docking {
-		/**
-		 * Docks to the top left of parent
-		 */
-		NW,
-		/**
-		 * Docks to the top right of parent
-		 */
-		NE,
-		/**
-		 * Docks to the bottom left of parent
-		 */
-		SW,
-		/**
-		 * Docks to the bottom right of parent
-		 */
-		SE
-	}
-	
+	public Vector2f orgPosition;
+	;
+	public Vector2f orgDimensions, orgRelDimensions;
+	public Vector4f borders = new Vector4f(1, 1, 1, 1);
+	public Vector4f borderHandles = new Vector4f(12, 12, 12, 12);
 	//<editor-fold desc="Fields">
 	protected Application app;
 	protected ElementManager screen;
+	protected boolean isMovable = false;
+	protected BitmapText textElement;
+	//	protected TextElement textElement;
+	protected Vector2f textPosition = new Vector2f(0, 0);
+	protected LineWrapMode textWrap = LineWrapMode.Word;
+	protected BitmapFont.Align textAlign = BitmapFont.Align.Left;
+	protected BitmapFont.VAlign textVAlign = BitmapFont.VAlign.Top;
+	protected String text = "";
+	protected BitmapFont font;
+	protected float fontSize = 20;
+	protected Vector4f textPadding = new Vector4f(0, 0, 0, 0);
+	protected ColorRGBA fontColor = ColorRGBA.White;
+	protected Map<String, Element> elementChildren = new LinkedHashMap();
+	// Clipping
+	protected boolean isClipped = false;
+	protected boolean wasClipped = false;
+	protected Element clippingLayer, secondaryClippingLayer;
+	protected Vector4f clippingBounds = new Vector4f();
+	// New Clipping
+	protected List<ClippingDefine> clippingLayers = new ArrayList();
+	protected boolean isVisible = true;
+	protected boolean wasVisible = true;
+	protected boolean isVisibleAsModal = false;
+	protected boolean isEnabled = true;
+	// Layouts
+	protected Layout layout = null;
+	protected LayoutHints layoutHints = new LayoutHints();
+	Vector2f origin = new Vector2f(0, 0);
 	private String UID;
 	private Vector2f position = new Vector2f();
-	public Vector2f orgPosition;
 	private Vector2f dimensions = new Vector2f();
-	public Vector2f orgDimensions, orgRelDimensions;
-	public Vector4f borders = new Vector4f(1,1,1,1);
-	public Vector4f borderHandles = new Vector4f(12,12,12,12);
 	private Vector2f minDimensions = new Vector2f(10, 10);
-	
 	private boolean ignoreMouse = false;
 	private boolean ignoreMouseLeftButton = false;
 	private boolean ignoreMouseRightButton = false;
@@ -118,7 +96,6 @@ public class Element extends Node {
 	private boolean ignoreTouch = false;
 	private boolean ignoreTouchMove = false;
 	private boolean ignoreFling = false;
-	protected boolean isMovable = false;
 	private boolean lockToParentBounds = false;
 	private boolean isResizable = false;
 	private boolean resizeN = true;
@@ -131,10 +108,8 @@ public class Element extends Node {
 	private boolean dockS = true;
 	private boolean scaleNS = true;
 	private boolean scaleEW = true;
-	
 	private boolean effectParent = false;
 	private boolean effectAbsoluteParent = false;
-	
 	private Geometry geom;
 	private ElementQuadGrid model;
 	private boolean tileImage = false;
@@ -144,80 +119,39 @@ public class Element extends Node {
 	private boolean useLocalTexture = false;
 	private String atlasCoords = "";
 	private Texture alphaMap = null;
-	
-	protected BitmapText textElement;
-//	protected TextElement textElement;
-	protected Vector2f textPosition = new Vector2f(0,0);
-	protected LineWrapMode textWrap = LineWrapMode.Word;
-	protected BitmapFont.Align textAlign = BitmapFont.Align.Left;
-	protected BitmapFont.VAlign textVAlign = BitmapFont.VAlign.Top;
-	protected String text = "";
 	private String toolTipText = null;
-	
-	protected BitmapFont font;
-	protected float fontSize = 20;
-	protected Vector4f textPadding = new Vector4f(0,0,0,0);
-	protected ColorRGBA fontColor = ColorRGBA.White;
 	private ColorRGBA defaultColor = new ColorRGBA(1,1,1,0);
-	
 	private Element elementParent = null;
-	protected Map<String, Element> elementChildren = new LinkedHashMap();
-	
-	// Clipping
-	protected boolean isClipped = false;
-	protected boolean wasClipped = false;
-	protected Element clippingLayer, secondaryClippingLayer;
-	protected Vector4f clippingBounds = new Vector4f();
 	private Vector4f clipPadding = new Vector4f(0,0,0,0);
 	private Vector4f textClipPadding = new Vector4f(0,0,0,0);
-	
-	// New Clipping
-	protected List<ClippingDefine> clippingLayers = new ArrayList();
 	private List<ClippingDefine> remClippingLayers = new ArrayList();
 	private Vector4f clipTest = new Vector4f();
-	
-	protected boolean isVisible = true;
-	protected boolean wasVisible = true;
-	protected boolean isVisibleAsModal = false;
 	private boolean hasFocus = false;
 	private boolean resetKeyboardFocus = true;
-	
 	private Form form;
 	private int tabIndex = 0;
-	
 	private float zOrder;
 	private boolean effectZOrder = true;
 	private Map<Effect.EffectEvent, Effect> effects = new HashMap();
-	
 	private OSRBridge bridge;
-	
 	private boolean ignoreGlobalAlpha = false;
 	private boolean isModal = false;
 	private boolean isGlobalModal = false;
-	
 	private Object elementUserData;
-	
 	private boolean initialized = false;
-	protected boolean isEnabled = true;
-	
 	private boolean isDragElement = false, isDropElement = false;
 	
 	private Docking docking = Docking.NW;
 	private Orientation orientation = Orientation.HORIZONTAL;
 	
-	// Layouts
-	protected Layout layout = null;
-	protected LayoutHints layoutHints = new LayoutHints();
-	//</editor-fold>
-	
 	/**
 	 * The Element class is the single primitive for all controls in the gui library.
 	 * Each element consists of an ElementQuadMesh for rendering resizable textures,
 	 * as well as a BitmapText element if setText(String text) is called.
-	 * 
+	 *
 	 * Behaviors, such as movement and resizing, are common to all elements and can
 	 * be enabled/disabled to ensure the element reacts to user input as needed.
-	 * 
+	 *
 	 * @param screen The Screen control the element or it's absolute parent element is being added to
 	 * @param UID A unique String identifier used when looking up elements by screen.getElementByID()
 	 * @param position A Vector2f containing the x/y coordinates (relative to it's parent elements x/y) for positioning
@@ -238,9 +172,9 @@ public class Element extends Node {
 		this.orgDimensions = dimensions.clone();
 		this.orgRelDimensions = new Vector2f(1,1);
 		this.borders.set(resizeBorders);
-		
+
 		BitmapFont tempFont = app.getAssetManager().loadFont(screen.getStyle("Font").getString("defaultFont"));
-		
+
 		font = new BitmapFont();
 		font.setCharSet(app.getAssetManager().loadFont(screen.getStyle("Font").getString("defaultFont")).getCharSet());
 		Material[] pages = new Material[tempFont.getPageSize()];
@@ -248,15 +182,15 @@ public class Element extends Node {
 			pages[i] = tempFont.getPage(i).clone();
 		}
 		font.setPages(pages);
-		
+
 		float imgWidth = 100;
 		float imgHeight = 100;
 		float pixelWidth = 1f/imgWidth;
 		float pixelHeight = 1f/imgHeight;
 		float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
-		
+
 		boolean useAtlas = screen.getUseTextureAtlas();
-		
+
 		if (texturePath != null) {
 			if (useAtlas && texturePath.indexOf("|") != -1 && texturePath.indexOf("=") != -1) {
 				float[] coords = screen.parseAtlasCoords(texturePath);
@@ -264,9 +198,9 @@ public class Element extends Node {
 				textureAtlasY = coords[1];
 				textureAtlasW = coords[2];
 				textureAtlasH = coords[3];
-				
+
 				this.atlasCoords = "x=" + coords[0] + "|y=" + coords[1] + "|w=" + coords[2] + "|h=" + coords[3];
-				
+
 				defaultTex = screen.getAtlasTexture();
 
 				imgWidth = defaultTex.getImage().getWidth();
@@ -277,7 +211,7 @@ public class Element extends Node {
 				textureAtlasY = imgHeight-textureAtlasY-textureAtlasH;
 			} else {
 				if (useAtlas) useLocalTexture = true;
-				
+
 				defaultTex = app.getAssetManager().loadTexture(texturePath);
 				defaultTex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
 				defaultTex.setMagFilter(Texture.MagFilter.Nearest);
@@ -302,27 +236,27 @@ public class Element extends Node {
 		if (useAtlas) mat.setBoolean("UseEffectTexCoords", true);
 		mat.setVector2("OffsetAlphaTexCoord", new Vector2f(0,0));
 		mat.setFloat("GlobalAlpha", screen.getGlobalAlpha());
-		
+
 		mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 		mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
-		
+
 		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
-		
+
         this.setName(UID + ":Node");
-                
+
 		geom = new Geometry(UID + ":Geometry");
 		geom.setMesh(model);
 		geom.setCullHint(CullHint.Never);
         geom.setQueueBucket(Bucket.Gui);
 		geom.setMaterial(mat);
-                
+
 		this.attachChild(geom);
-		
+
 		this.setQueueBucket(Bucket.Gui);
-		
+
 		this.setLocalTranslation(position.x, position.y, 0);
 	}
-	
+
 	/**
 	 * Converts the the inputed percentage (0.0f-1.0f) into pixels of the elements image
 	 * @param in Vector2f containing the x and y percentage
@@ -338,8 +272,8 @@ public class Element extends Node {
 		}
 		return in;
 	}
+	//</editor-fold>
 	
-	//<editor-fold desc="Parent/Child">
 	/**
 	 * Adds the specified Element as a child to this Element.
 	 * @param child The Element to add as a child
@@ -354,7 +288,7 @@ public class Element extends Node {
 	 */
 	public void addChild(Element child, boolean hide) {
 		child.elementParent = this;
-		
+
 		for (ClippingDefine def : clippingLayers) {
 			if (def.getClipping() == null) {
 			//	if (child.getX() >= 0 && child.getX()+child.getWidth() <= def.getElement().getWidth() &&
@@ -363,7 +297,7 @@ public class Element extends Node {
 			}// else
 			//	child.addClippingLayer(def.getElement(),def.getClipping());
 		}
-		
+
 		if (!child.getInitialized()) {
 			child.setY(this.getHeight()-child.getHeight()-child.getY());
 			child.orgPosition = position.clone();
@@ -372,7 +306,7 @@ public class Element extends Node {
 		}
 		child.orgRelDimensions.set(child.getWidth()/getWidth(),child.getHeight()/getHeight());
 		child.setQueueBucket(Bucket.Gui);
-		
+
 		if (screen.getElementById(child.getUID()) != null) {
 			try {
 				throw new ConflictingIDException();
@@ -383,13 +317,15 @@ public class Element extends Node {
 		} else {
 			elementChildren.put(child.getUID(), child);
 			this.attachChild(child);
-			
+
 			if (hide)
 				child.hide();
 		}
 		resetChildZOrder();
 	}
-	
+
+	//<editor-fold desc="Parent/Child">
+
 	/**
 	 * Removes the specified Element
 	 * @param child Element to remove
@@ -403,7 +339,7 @@ public class Element extends Node {
 			for (ClippingDefine def : clippingLayers)
 				e.removeClippingLayer(def.getElement());
 			e.cleanup();
-			
+
 			if (screen.getUseToolTips()) {
 				if (screen.getToolTipFocus() == this)
 					screen.hideToolTip();
@@ -431,7 +367,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the child elements as a Map
-	 * @return 
+	 * @return
 	 */
 	public Map<String, Element> getElementsAsMap() {
 		return this.elementChildren;
@@ -439,7 +375,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the child elements as a Collection
-	 * @return 
+	 * @return
 	 */
 	public Collection<Element> getElements() {
 		return this.elementChildren.values();
@@ -447,7 +383,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the one and only Element's screen
-	 * @return 
+	 * @return
 	 */
 	public ElementManager getScreen() {
 		return this.screen;
@@ -518,7 +454,6 @@ public class Element extends Node {
 	public void setElementParent(Element elementParent) {
 		this.elementParent = elementParent;
 	}
-	//</editor-fold>
 	
 	/**
 	 * Allows for setting the Element UID if (and ONLY if) the Element Parent is null
@@ -541,6 +476,7 @@ public class Element extends Node {
 	public String getUID() {
 		return UID;
 	}
+	//</editor-fold>
 	
 	//<editor-fold desc="Z-Order">
 	private int getParentCount() {
@@ -599,7 +535,7 @@ public class Element extends Node {
 			));
 			step += nStep;
 		}
-		
+
 		for (Element el : elementChildren.values()) {
 			el.initZOrder(step);
 			step += nStep;
@@ -616,24 +552,24 @@ public class Element extends Node {
 	
 	/**
 	 * Sets the Elements zOrder (I would suggest NOT using this method)
-	 * @param zOrder 
+	 * @param zOrder
 	 */
 	public void setZOrder(float zOrder) {
 		this.zOrder = zOrder;
 		initZOrder(zOrder);
+	}
+
+	public boolean getEffectZOrder() {
+		return this.effectZOrder;
 	}
 	
 	public void setEffectZOrder(boolean effectZOrder) {
 		this.effectZOrder = effectZOrder;
 	}
 	
-	public boolean getEffectZOrder() { return this.effectZOrder; }
-	//</editor-fold>
-	
-	//<editor-fold desc="Scaling, Docking & Other Behaviors">
 	/**
 	 * The setAsContainer only method removes the Mesh component (rendered Mesh) from the
-	 * Element, leaving only Element functionality.  Call this method to set the Element 
+	 * Element, leaving only Element functionality.  Call this method to set the Element
 	 * for use as a parent container.
 	 */
 	public void setAsContainerOnly() {
@@ -641,8 +577,20 @@ public class Element extends Node {
 	}
 	
 	/**
+	 * Returns if the element is set to ingnore mouse events
+	 *
+	 * @return boolean ignoreMouse
+	 */
+	public boolean getIgnoreMouse() {
+		return this.ignoreMouse;
+	}
+	//</editor-fold>
+
+	//<editor-fold desc="Scaling, Docking & Other Behaviors">
+
+	/**
 	 * Informs the screen control that this Element should be ignored by mouse events.
-	 * 
+	 *
 	 * @param ignoreMouse boolean
 	 */
 	public void setIgnoreMouse(boolean ignoreMouse) {
@@ -654,17 +602,16 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns if the element is set to ingnore mouse events
-	 * 
-	 * @return boolean ignoreMouse
+	 * Returns true if both left and right mouse buttons are being ignored
+	 * @return
 	 */
-	public boolean getIgnoreMouse() {
-		return this.ignoreMouse;
+	public boolean getIgnoreMouseButtons() {
+		return (getIgnoreMouseLeftButton() && getIgnoreMouseRightButton());
 	}
 	
 	/**
 	 * Element will ignore mouse left & right button events
-	 * @param ignoreMouseButtons 
+	 * @param ignoreMouseButtons
 	 */
 	public void setIgnoreMouseButtons(boolean ignoreMouseButtons) {
 		setIgnoreMouseLeftButton(ignoreMouseButtons);
@@ -672,56 +619,64 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns true if both left and right mouse buttons are being ignored
-	 * @return 
+	 * Returns if the left mouse button is being ignored
+	 * @return
 	 */
-	public boolean getIgnoreMouseButtons() { return (getIgnoreMouseLeftButton() && getIgnoreMouseRightButton()); }
+	public boolean getIgnoreMouseLeftButton() {
+		return this.ignoreMouseLeftButton;
+	}
 	
 	/**
 	 * Element will ignore mouse left button events
-	 * @param ignoreMouseLeftButton 
+	 * @param ignoreMouseLeftButton
 	 */
 	public void setIgnoreMouseLeftButton(boolean ignoreMouseLeftButton) {
 		this.ignoreMouseLeftButton = ignoreMouseLeftButton;
 	}
 	
 	/**
-	 * Returns if the left mouse button is being ignored
-	 * @return 
+	 * Returns if the right mouse button is being ignored
+	 * @return
 	 */
-	public boolean getIgnoreMouseLeftButton() { return this.ignoreMouseLeftButton; }
+	public boolean getIgnoreMouseRightButton() {
+		return this.ignoreMouseRightButton;
+	}
 	
 	/**
 	 * Element will ignore mouse right button events
-	 * @param ignoreMouseRightButton 
+	 * @param ignoreMouseRightButton
 	 */
 	public void setIgnoreMouseRightButton(boolean ignoreMouseRightButton) {
 		this.ignoreMouseRightButton = ignoreMouseRightButton;
 	}
 	
 	/**
-	 * Returns if the right mouse button is being ignored
-	 * @return 
+	 * Returns if the element ignores mouse focus
+	 * @return
 	 */
-	public boolean getIgnoreMouseRightButton() { return this.ignoreMouseRightButton; }
+	public boolean getIgnoreMouseFocus() {
+		return this.ignoreMouseFocus;
+	}
 	
 	/**
 	 * Element will ignore mouse focus
-	 * @param ignoreMouseFocus 
+	 * @param ignoreMouseFocus
 	 */
 	public void setIgnoreMouseFocus(boolean ignoreMouseFocus) {
 		this.ignoreMouseFocus = ignoreMouseFocus;
 	}
 	
 	/**
-	 * Returns if the element ignores mouse focus
-	 * @return 
+	 * Returns if the element is ignoring both mouse wheel click and move events
+	 * @return
 	 */
-	public boolean getIgnoreMouseFocus() { return this.ignoreMouseFocus; }
+	public boolean getIgnoreMouseWheel() {
+		return (getIgnoreMouseWheelClick() && getIgnoreMouseWheelMove());
+	}
 	
 	/**
 	 * Element will ignore mouse wheel click and move events
-	 * @param ignoreMouseWheel 
+	 * @param ignoreMouseWheel
 	 */
 	public void setIgnoreMouseWheel(boolean ignoreMouseWheel) {
 		setIgnoreMouseWheelClick(ignoreMouseWheel);
@@ -729,42 +684,48 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns if the element is ignoring both mouse wheel click and move events
-	 * @return 
+	 * Returns if the element ignores mouse wheel clicks
+	 * @return
 	 */
-	public boolean getIgnoreMouseWheel() { return (getIgnoreMouseWheelClick() && getIgnoreMouseWheelMove()); }
+	public boolean getIgnoreMouseWheelClick() {
+		return this.ignoreMouseWheelClick;
+	}
 	
 	/**
 	 * Element will ignore mouse wheel click events
-	 * @param ignoreMouseWheelClick 
+	 * @param ignoreMouseWheelClick
 	 */
 	public void setIgnoreMouseWheelClick(boolean ignoreMouseWheelClick) {
 		this.ignoreMouseWheelClick = ignoreMouseWheelClick;
 	}
 	
 	/**
-	 * Returns if the element ignores mouse wheel clicks
-	 * @return 
+	 * Returns if the element is ignoring mouse wheel moves
+	 * @return
 	 */
-	public boolean getIgnoreMouseWheelClick() { return this.ignoreMouseWheelClick; }
+	public boolean getIgnoreMouseWheelMove() {
+		return this.ignoreMouseWheelMove;
+	}
 	
 	/**
 	 * Element will ignore mouse wheel mouse events;
-	 * @param ignoreMouseWheelMove 
+	 * @param ignoreMouseWheelMove
 	 */
 	public void setIgnoreMouseWheelMove(boolean ignoreMouseWheelMove) {
 		this.ignoreMouseWheelMove = ignoreMouseWheelMove;
 	}
 	
 	/**
-	 * Returns if the element is ignoring mouse wheel moves
-	 * @return 
+	 * Returns if the element ignores touch down, up, move & fling events
+	 * @return
 	 */
-	public boolean getIgnoreMouseWheelMove() { return this.ignoreMouseWheelMove; }
+	public boolean getIgnoreTouchEvents() {
+		return (getIgnoreTouch() && getIgnoreTouchMove() && getIgnoreFling());
+	}
 	
 	/**
 	 * Element will ignore touch down up move and fling events
-	 * @param ignoreTouchEvents 
+	 * @param ignoreTouchEvents
 	 */
 	public void setIgnoreTouchEvents(boolean ignoreTouchEvents) {
 		setIgnoreTouch(ignoreTouchEvents);
@@ -773,58 +734,51 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns if the element ignores touch down, up, move & fling events
-	 * @return 
+	 * Returns if the element ignores touch down and up events
+	 * @return
 	 */
-	public boolean getIgnoreTouchEvents() { return (getIgnoreTouch() && getIgnoreTouchMove() && getIgnoreFling()); }
+	public boolean getIgnoreTouch() {
+		return ignoreTouch;
+	}
 	
 	/**
 	 * Element will ignore touch down and up events
-	 * @param ignoreTouch 
+	 * @param ignoreTouch
 	 */
 	public void setIgnoreTouch(boolean ignoreTouch) {
 		this.ignoreTouch = ignoreTouch;
 	}
 	
 	/**
-	 * Returns if the element ignores touch down and up events
-	 * @return 
+	 * Returns if the element ignores touch move events
+	 * @return
 	 */
-	public boolean getIgnoreTouch() { return ignoreTouch; }
+	public boolean getIgnoreTouchMove() {
+		return this.ignoreTouchMove;
+	}
+	
 	/**
 	 * element will ignore touch move events
-	 * @param ignoreTouchMove 
+	 * @param ignoreTouchMove
 	 */
 	public void setIgnoreTouchMove(boolean ignoreTouchMove) {
 		this.ignoreTouchMove = ignoreTouchMove;
 	}
-	
+
 	/**
-	 * Returns if the element ignores touch move events
-	 * @return 
+	 * Returns if the element ignores fling events
+	 * @return
 	 */
-	public boolean getIgnoreTouchMove() { return this.ignoreTouchMove; }
-	
-	/**
-	 * Element will ignore touch fling events
-	 * @param ignoreFling 
-	 */
-	public void setIgnoreFling(boolean ignoreFling) {
-		this.ignoreFling = ignoreFling;
+	public boolean getIgnoreFling() {
+		return this.ignoreFling;
 	}
 	
 	/**
-	 * Returns if the element ignores fling events
-	 * @return 
+	 * Element will ignore touch fling events
+	 * @param ignoreFling
 	 */
-	public boolean getIgnoreFling() { return this.ignoreFling; }
-	
-	/**
-	 * Enables draggable behavior for this element
-	 * @param isMovable boolean
-	 */
-	public void setIsMovable(boolean isMovable) {
-		this.isMovable = isMovable;
+	public void setIgnoreFling(boolean ignoreFling) {
+		this.ignoreFling = ignoreFling;
 	}
 	
 	/**
@@ -836,11 +790,11 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Enables resize behavior for this element
-	 * @param isResizable boolean
+	 * Enables draggable behavior for this element
+	 * @param isMovable boolean
 	 */
-	public void setIsResizable(boolean isResizable) {
-		this.isResizable = isResizable;
+	public void setIsMovable(boolean isMovable) {
+		this.isMovable = isMovable;
 	}
 	
 	/**
@@ -852,11 +806,11 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Enables/disables north border for resizing
-	 * @param resizeN boolean
+	 * Enables resize behavior for this element
+	 * @param isResizable boolean
 	 */
-	public void setResizeN(boolean resizeN) {
-		this.resizeS = resizeN;
+	public void setIsResizable(boolean isResizable) {
+		this.isResizable = isResizable;
 	}
 	
 	/**
@@ -868,11 +822,11 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Enables/disables south border for resizing
-	 * @param resizeS boolean
+	 * Enables/disables north border for resizing
+	 * @param resizeN boolean
 	 */
-	public void setResizeS(boolean resizeS) {
-		this.resizeN = resizeS;
+	public void setResizeN(boolean resizeN) {
+		this.resizeS = resizeN;
 	}
 	
 	/**
@@ -884,11 +838,11 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Enables/disables west border for resizing
-	 * @param resizeW boolean
+	 * Enables/disables south border for resizing
+	 * @param resizeS boolean
 	 */
-	public void setResizeW(boolean resizeW) {
-		this.resizeW = resizeW;
+	public void setResizeS(boolean resizeS) {
+		this.resizeN = resizeS;
 	}
 	
 	/**
@@ -900,11 +854,11 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Enables/disables east border for resizing
-	 * @param resizeE boolean
+	 * Enables/disables west border for resizing
+	 * @param resizeW boolean
 	 */
-	public void setResizeE(boolean resizeE) {
-		this.resizeE = resizeE;
+	public void setResizeW(boolean resizeW) {
+		this.resizeW = resizeW;
 	}
 	
 	/**
@@ -916,24 +870,43 @@ public class Element extends Node {
 	}
 	
 	/**
+	 * Enables/disables east border for resizing
+	 * @param resizeE boolean
+	 */
+	public void setResizeE(boolean resizeE) {
+		this.resizeE = resizeE;
+	}
+
+	public Docking getDocking() {
+		return this.docking;
+	}
+	
+	/**
 	 * Sets how the element will docking to it's parent element during resize events.
 	 * NW = Top Left of parent element
 	 * NE = Top Right of parent element
 	 * SW = Bottom Left of parent element
 	 * SE = Bottom Right of parent element
-	 * @param docking 
+	 * @param docking
 	 */
 	public void setDocking(Docking docking) {
 		this.docking = docking;
 	}
-	
-	public Docking getDocking() {
-		return this.docking;
+
+	/**
+	 * Returns if the Element is docked to the north quadrant of it's parent element.
+	 *
+	 * @return boolean dockN
+	 */
+	@Deprecated
+	public boolean getDockN() {
+		return this.dockS;
 	}
+	
 	/**
 	 * Enables north docking of element (disables south docking of Element).  This
 	 * determines how the Element should retain positioning on parent resize events.
-	 * 
+	 *
 	 * @param dockN boolean
 	 */
 	@Deprecated
@@ -950,20 +923,20 @@ public class Element extends Node {
 		}
 		setDocking(d);
 	}
-	
+
 	/**
-	 * Returns if the Element is docked to the north quadrant of it's parent element.
-	 * @return boolean dockN
+	 * Returns if the Element is docked to the west quadrant of it's parent element.
+	 * @return boolean dockW
 	 */
 	@Deprecated
-	public boolean getDockN() {
-		return this.dockS;
+	public boolean getDockW() {
+		return this.dockW;
 	}
 	
 	/**
 	 * Enables west docking of Element (disables east docking of Element).  This
 	 * determines how the Element should retain positioning on parent resize events.
-	 * 
+	 *
 	 * @param dockW boolean
 	 */
 	@Deprecated
@@ -980,20 +953,20 @@ public class Element extends Node {
 		}
 		setDocking(d);
 	}
-	
+
 	/**
-	 * Returns if the Element is docked to the west quadrant of it's parent element.
-	 * @return boolean dockW
+	 * Returns if the Element is docked to the east quadrant of it's parent element.
+	 * @return boolean dockE
 	 */
 	@Deprecated
-	public boolean getDockW() {
-		return this.dockW;
+	public boolean getDockE() {
+		return this.dockE;
 	}
 	
 	/**
 	 * Enables east docking of Element (disables west docking of Element).  This
 	 * determines how the Element should retain positioning on parent resize events.
-	 * 
+	 *
 	 * @param dockE boolean
 	 */
 	@Deprecated
@@ -1010,20 +983,20 @@ public class Element extends Node {
 		}
 		setDocking(d);
 	}
-	
+
 	/**
-	 * Returns if the Element is docked to the east quadrant of it's parent element.
-	 * @return boolean dockE
+	 * Returns if the Element is docked to the south quadrant of it's parent element.
+	 * @return boolean dockS
 	 */
 	@Deprecated
-	public boolean getDockE() {
-		return this.dockE;
+	public boolean getDockS() {
+		return this.dockN;
 	}
 	
 	/**
 	 * Enables south docking of Element (disables north docking of Element).  This
 	 * determines how the Element should retain positioning on parent resize events.
-	 * 
+	 *
 	 * @param dockS boolean
 	 */
 	@Deprecated
@@ -1040,14 +1013,15 @@ public class Element extends Node {
 		}
 		setDocking(d);
 	}
-	
+
 	/**
-	 * Returns if the Element is docked to the south quadrant of it's parent element.
-	 * @return boolean dockS
+	 * Returns if the Element is set to scale vertically when it's parent Element is
+	 * resized.
+	 *
+	 * @return boolean scaleNS
 	 */
-	@Deprecated
-	public boolean getDockS() {
-		return this.dockN;
+	public boolean getScaleNS() {
+		return this.scaleNS;
 	}
 	
 	/**
@@ -1057,15 +1031,15 @@ public class Element extends Node {
 	public void setScaleNS(boolean scaleNS) {
 		this.scaleNS = scaleNS;
 	}
-	
+
 	/**
-	 * Returns if the Element is set to scale vertically when it's parent Element is
+	 * Returns if the Element is set to scale horizontally when it's parent Element is
 	 * resized.
-	 * 
-	 * @return boolean scaleNS
+	 *
+	 * @return boolean scaleEW
 	 */
-	public boolean getScaleNS() {
-		return this.scaleNS;
+	public boolean getScaleEW() {
+		return this.scaleEW;
 	}
 	
 	/**
@@ -1075,27 +1049,7 @@ public class Element extends Node {
 	public void setScaleEW(boolean scaleEW) {
 		this.scaleEW = scaleEW;
 	}
-	
-	/**
-	 * Returns if the Element is set to scale horizontally when it's parent Element is
-	 * resized.
-	 * 
-	 * @return boolean scaleEW
-	 */
-	public boolean getScaleEW() {
-		return this.scaleEW;
-	}
-	
-	/**
-	 * Sets the element to pass certain events (movement, resizing) to it direct parent instead
-	 * of effecting itself.
-	 * 
-	 * @param effectParent boolean
-	 */
-	public void setEffectParent(boolean effectParent) {
-		this.effectParent = effectParent;
-	}
-	
+
 	/**
 	 * Returns if the Element is set to pass events to it's direct parent
 	 * @return boolean effectParent
@@ -1105,18 +1059,15 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Sets the element to pass certain events (movement, resizing) to it absolute
-	 * parent instead of effecting itself.
-	 * 
-	 * The Elements absolute parent is the element farthest up in it's nesting order, 
-	 * or simply put, was added to the screen.
-	 * 
-	 * @param effectAbsoluteParent boolean
+	 * Sets the element to pass certain events (movement, resizing) to it direct parent instead
+	 * of effecting itself.
+	 *
+	 * @param effectParent boolean
 	 */
-	public void setEffectAbsoluteParent(boolean effectAbsoluteParent) {
-		this.effectAbsoluteParent = effectAbsoluteParent;
+	public void setEffectParent(boolean effectParent) {
+		this.effectParent = effectParent;
 	}
-	
+
 	/**
 	 * Returns if the Element is set to pass events to it's absolute parent
 	 * @return boolean effectParent
@@ -1126,34 +1077,48 @@ public class Element extends Node {
 	}
 	
 	/**
+	 * Sets the element to pass certain events (movement, resizing) to it absolute
+	 * parent instead of effecting itself.
+	 *
+	 * The Elements absolute parent is the element farthest up in it's nesting order,
+	 * or simply put, was added to the screen.
+	 *
+	 * @param effectAbsoluteParent boolean
+	 */
+	public void setEffectAbsoluteParent(boolean effectAbsoluteParent) {
+		this.effectAbsoluteParent = effectAbsoluteParent;
+	}
+	
+/**
 	 * Forces the object to stay within the constraints of it's parent Elements
 	 * dimensions.
 	 * NOTE: use setLockToParentBounds instead.
-	 * 
+	 *
 	 * @param lockToParentBounds boolean
 	 */
 	@Deprecated
 	public void setlockToParentBounds(boolean lockToParentBounds) {
 		this.lockToParentBounds = lockToParentBounds;
-	}/**
-	 * Forces the object to stay within the constraints of it's parent Elements
-	 * dimensions.
-	 * 
-	 * @param lockToParentBounds boolean
-	 */
-	public void setLockToParentBounds(boolean lockToParentBounds) {
-		this.lockToParentBounds = lockToParentBounds;
 	}
 	
 	/**
 	 * Returns if the Element has been constrained to it's parent Element's dimensions.
-	 * 
+	 *
 	 * @return boolean lockToParentBounds
 	 */
 	public boolean getLockToParentBounds() {
 		return this.lockToParentBounds;
 	}
-	
+
+	/**
+	 * Forces the object to stay within the constraints of it's parent Elements
+	 * dimensions.
+	 *
+	 * @param lockToParentBounds boolean
+	 */
+	public void setLockToParentBounds(boolean lockToParentBounds) {
+		this.lockToParentBounds = lockToParentBounds;
+	}
 	public void setGlobalUIScale(float widthPercent, float heightPercent) {
 		for (Element el : elementChildren.values()) {
 			el.setPosition(el.getPosition().x*widthPercent, el.getPosition().y*heightPercent);
@@ -1161,6 +1126,18 @@ public class Element extends Node {
 			el.setFontSize(el.getFontSize()*heightPercent);
 			el.setGlobalUIScale(widthPercent, heightPercent);
 		}
+	}
+
+	public void controlIsEnabledHook(boolean isEnabled) {
+	}
+
+	/**
+	 * Returns if the element is currently enabled
+	 *
+	 * @return boolean
+	 */
+	public boolean getIsEnabled() {
+		return this.isEnabled;
 	}
 	
 	/**
@@ -1174,19 +1151,15 @@ public class Element extends Node {
 			el.setIsEnabled(isEnabled);
 		}
 	}
-	
-	public void controlIsEnabledHook(boolean isEnabled) {  }
-	
+
 	/**
-	 * Returns if the element is currently enabled
+	 * Returns if the Element is currently flagged as a Drag Element for Drag & Drop interaction
 	 * @return boolean
 	 */
-	public boolean getIsEnabled() {
-		return this.isEnabled;
+	public boolean getIsDragDropDragElement() {
+		return this.isDragElement;
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Drag & Drop Support">
 	/**
 	 * Flags Element as Drag Element for Drag & Drop interaction
 	 * @param isDragElement boolean
@@ -1196,13 +1169,16 @@ public class Element extends Node {
 		if (isDragElement)
 			this.isDropElement = false;
 	}
+	//</editor-fold>
 	
+	//<editor-fold desc="Drag & Drop Support">
+
 	/**
-	 * Returns if the Element is currently flagged as a Drag Element for Drag & Drop interaction
+	 * Returns if the Element is currently flagged as a Drop Element for Drag & Drop interaction
 	 * @return boolean
 	 */
-	public boolean getIsDragDropDragElement() {
-		return this.isDragElement;
+	public boolean getIsDragDropDropElement() {
+		return this.isDropElement;
 	}
 	
 	/**
@@ -1216,30 +1192,9 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns if the Element is currently flagged as a Drop Element for Drag & Drop interaction
-	 * @return boolean
-	 */
-	public boolean getIsDragDropDropElement() {
-		return this.isDropElement;
-	}
-	//</editor-fold>
-	
-	//<editor-fold desc="Sizing & Positioning">
-	/**
 	 * Set the x,y coordinates of the Element.  X and y are relative to the parent
 	 * Element.
-	 * 
-	 * @param position Vector2f screen poisition of Element
-	 */
-	public void setPosition(Vector2f position) {
-		this.position.set(position);
-		updateNodeLocation();
-	}
-	
-	/**
-	 * Set the x,y coordinates of the Element.  X and y are relative to the parent
-	 * Element.
-	 * 
+	 *
 	 * @param x The x coordinate screen poisition of Element
 	 * @param y The y coordinate screen poisition of Element
 	 */
@@ -1249,38 +1204,32 @@ public class Element extends Node {
 		updateNodeLocation();
 	}
 	
-	/**
-	 * Set the x coordinates of the Element.  X is relative to the parent Element.
-	 * 
-	 * @param x The x coordinate screen poisition of Element
-	 */
-	public void setX(float x) {
-		this.position.setX(x);
-		updateNodeLocation();
-	}
-	
-	/**
-	 * Set the y coordinates of the Element.  Y is relative to the parent Element.
-	 * 
-	 * @param y The y coordinate screen poisition of Element
-	 */
-	public void setY(float y) {
-		this.position.setY(y);
-		updateNodeLocation();
-	}
-	
 	private void updateNodeLocation() {
 		this.setLocalTranslation(position.x, position.y, this.getLocalTranslation().getZ());
 	//	updateClipping();
 		updateClippingLayers();
 	}
+	//</editor-fold>
 	
+	//<editor-fold desc="Sizing & Positioning">
+
 	/**
 	 * Returns the current screen location of the Element
 	 * @return Vector2f position
 	 */
 	public Vector2f getPosition() {
 		return position;
+	}
+
+	/**
+	 * Set the x,y coordinates of the Element.  X and y are relative to the parent
+	 * Element.
+	 *
+	 * @param position Vector2f screen poisition of Element
+	 */
+	public void setPosition(Vector2f position) {
+		this.position.set(position);
+		updateNodeLocation();
 	}
 	
 	/**
@@ -1290,13 +1239,33 @@ public class Element extends Node {
 	public float getX() {
 		return position.x;
 	}
+
+	/**
+	 * Set the x coordinates of the Element.  X is relative to the parent Element.
+	 *
+	 * @param x The x coordinate screen poisition of Element
+	 */
+	public void setX(float x) {
+		this.position.setX(x);
+		updateNodeLocation();
+	}
 	
 	/**
 	 * Gets the relative y coordinate of the Element from it's parent Element's y
-	 * @return  float
+	 * @return float
 	 */
 	public float getY() {
 		return position.y;
+	}
+
+	/**
+	 * Set the y coordinates of the Element.  Y is relative to the parent Element.
+	 *
+	 * @param y The y coordinate screen poisition of Element
+	 */
+	public void setY(float y) {
+		this.position.setY(y);
+		updateNodeLocation();
 	}
 	
 	/**
@@ -1345,8 +1314,30 @@ public class Element extends Node {
 		if (textElement != null) {
 			updateTextElement();
 		}
-	//	updateClipping();
+		//	updateClipping();
 		updateClippingLayers();
+	}
+
+	public Vector2f getMinDimensions() {
+		return this.minDimensions;
+	}
+
+	/**
+	 * Stubbed for future use.  This should limit resizing to the minimum dimensions defined
+	 *
+	 * @param minDimensions The absolute minimum dimensions for this Element.
+	 */
+	public void setMinDimensions(Vector2f minDimensions) {
+		if (this.minDimensions == null) this.minDimensions = new Vector2f();
+		this.minDimensions.set(minDimensions);
+	}
+
+	/**
+	 * Returns a Vector2f containing the actual width and height of an Element
+	 * @return float
+	 */
+	public Vector2f getDimensions() {
+		return dimensions;
 	}
 	
 	/**
@@ -1365,20 +1356,26 @@ public class Element extends Node {
 		if (textElement != null) {
 			updateTextElement();
 		}
-	//	updateClipping();
+		//	updateClipping();
 		updateClippingLayers();
 	}
-	
+
 	/**
-	 * Stubbed for future use.  This should limit resizing to the minimum dimensions defined
-	 * @param minDimensions The absolute minimum dimensions for this Element.
+	 * Returns the dimensions defined at the time of the Element's creation.
+	 *
+	 * @return
 	 */
-	public void setMinDimensions(Vector2f minDimensions) {
-		if (this.minDimensions == null) this.minDimensions = new Vector2f();
-		this.minDimensions.set(minDimensions);
+	public Vector2f getOrgDimensions() {
+		return this.orgDimensions;
 	}
-	
-	public Vector2f getMinDimensions() { return this.minDimensions; }
+
+	/**
+	 * Returns the actual width of an Element
+	 * @return float
+	 */
+	public float getWidth() {
+		return dimensions.x;
+	}
 	
 	/**
 	 * Sets the width of the element
@@ -1396,8 +1393,16 @@ public class Element extends Node {
 		if (textElement != null) {
 			updateTextElement();
 		}
-	//	updateClipping();
+		//	updateClipping();
 		updateClippingLayers();
+	}
+
+	/**
+	 * Returns the actual height of an Element
+	 * @return float
+	 */
+	public float getHeight() {
+		return dimensions.y;
 	}
 	
 	/**
@@ -1421,36 +1426,6 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Returns a Vector2f containing the actual width and height of an Element
-	 * @return float
-	 */
-	public Vector2f getDimensions() {
-		return dimensions;
-	}
-	
-	/**
-	 * Returns the dimensions defined at the time of the Element's creation.
-	 * @return 
-	 */
-	public Vector2f getOrgDimensions() { return this.orgDimensions; }
-	
-	/**
-	 * Returns the actual width of an Element
-	 * @return float
-	 */
-	public float getWidth() {
-		return dimensions.x;
-	}
-	
-	/**
-	 * Returns the actual height of an Element
-	 * @return float
-	 */
-	public float getHeight() {
-		return dimensions.y;
-	}
-	
-	/**
 	 * Returns the width of an Element from screen x 0
 	 * @return float
 	 */
@@ -1465,7 +1440,6 @@ public class Element extends Node {
 	public float getAbsoluteHeight() {
 		return getAbsoluteY() + getHeight();
 	}
-	//</editor-fold>
 	
 	/**
 	 * Stubbed for future use.
@@ -1483,29 +1457,29 @@ public class Element extends Node {
 			setY(getElementParent().getHeight()-getHeight()-getY());
 		else
 			setY(screen.getHeight()-getHeight()-getY());
-		
+
 		for (Element el : elementChildren.values()) {
 			el.validateLayout();
 		}
 	}
-	
+
 	/**
 	 * Stubbed for future use.
 	 */
 	public void setInitialized() {
 		this.initialized = true;
 	}
+	//</editor-fold>
 	
 	/**
 	 * Stubbed for future use.
 	 */
 	public boolean getInitialized() { return this.initialized; }
 	
-	//<editor-fold desc="Resize & Move">
 	/**
 	 * The preferred method for resizing Elements if the resize must effect nested
 	 * Elements as well.
-	 * 
+	 *
 	 * @param x the absolute x coordinate from screen x 0
 	 * @param y the absolute y coordinate from screen y 0
 	 * @param dir The Element.Borders used to determine the direction of the resize event
@@ -1693,11 +1667,13 @@ public class Element extends Node {
 		}
 	}
 	
+	//<editor-fold desc="Resize & Move">
+
 	/**
 	 * Overridable method for extending the resize event
 	 */
 	public void controlResizeHook() {
-		
+
 	}
 	
 	public void sizeToContent() {
@@ -1718,7 +1694,7 @@ public class Element extends Node {
 		this.setDimensions(innerW+innerX, innerH+innerY);
 		for (Element child : elementChildren.values()) {
 			float diff = newY.get(child);
-			child.setY(innerH-(diff-innerY));
+			child.setY(innerH - (diff - innerY));
 		}
 	}
 	
@@ -1756,11 +1732,9 @@ public class Element extends Node {
 	 * Overridable method for extending the move event
 	 */
 	public void controlMoveHook() {
-		
+
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Auto Centering">
 	/**
 	 * Centers the Element to it's parent Element.  If the parent element is null, it will use the screen's width/height.
 	 */
@@ -1774,25 +1748,26 @@ public class Element extends Node {
 	
 	public void centerToParentV() {
 		if (elementParent == null) {
-			setPosition(getX(),screen.getHeight()/2-(getHeight()/2));
+			setPosition(getX(),screen.getHeight() / 2 - (getHeight() / 2));
 		} else {
 			setPosition(getX(),elementParent.getHeight()/2-(getHeight()/2));
 		}
 	}
+	//</editor-fold>
 	
+	//<editor-fold desc="Auto Centering">
+
 	public void centerToParentH() {
 		if (elementParent == null) {
 			setPosition(screen.getWidth()/2-(getWidth()/2),getY());
 		} else {
-			setPosition(elementParent.getWidth()/2-(getWidth()/2),getY());
+			setPosition(elementParent.getWidth() / 2 - (getWidth()/2),getY());
 		}
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Resze Borders">
 	/**
 	 * Set the north, west, east and south borders in number of pixels
-	 * @param borderSize 
+	 * @param borderSize
 	 */
 	public void setResizeBorders(float borderSize) {
 		borders.set(borderSize,borderSize,borderSize,borderSize);
@@ -1811,7 +1786,10 @@ public class Element extends Node {
 		borders.setZ(eBorder);
 		borders.setW(sBorder);
 	}
+	//</editor-fold>
 	
+	//<editor-fold desc="Resze Borders">
+
 	/**
 	 * Sets the width of north border in number of pixels
 	 * @param nBorder float
@@ -1846,7 +1824,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the height of the north resize border
-	 * 
+	 *
 	 * @return float
 	 */
 	public float getResizeBorderNorthSize() {
@@ -1855,7 +1833,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the width of the west resize border
-	 * 
+	 *
 	 * @return float
 	 */
 	public float getResizeBorderWestSize() {
@@ -1864,7 +1842,7 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the width of the east resize border
-	 * 
+	 *
 	 * @return float
 	 */
 	public float getResizeBorderEastSize() {
@@ -1873,18 +1851,16 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the height of the south resize border
-	 * 
+	 *
 	 * @return float
 	 */
 	public float getResizeBorderSouthSize() {
 		return this.borderHandles.w;
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Mesh & Geometry">
 	/**
 	 * Returns a pointer to the custom mesh used to render the Element.
-	 * 
+	 *
 	 * @return ElementGridQuad model
 	 */
 	public ElementQuadGrid getModel() {
@@ -1893,14 +1869,23 @@ public class Element extends Node {
 	
 	/**
 	 * Returns the Element's Geometry.
-	 * @return 
+	 * @return
 	 */
 	public Geometry getGeometry() {
 		return this.geom;
 	}
 	//</editor-fold>
+
+	//<editor-fold desc="Mesh & Geometry">
+
+	/**
+	 * Returns the Bitmapfont used by the element's text layer
+	 * @return BitmapFont font
+	 */
+	public BitmapFont getFont() {
+		return this.font;
+	}
 	
-	//<editor-fold desc="Fonts & Text">
 	/**
 	 * Sets the element's text layer font
 	 * @param fontPath String The font asset path
@@ -1914,13 +1899,16 @@ public class Element extends Node {
 			setText(text);
 		}
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Fonts & Text">
+
 	/**
-	 * Returns the Bitmapfont used by the element's text layer
-	 * @return BitmapFont font
+	 * Returns the element's text layer font size
+	 * @return float fontSize
 	 */
-	public BitmapFont getFont() {
-		return this.font;
+	public float getFontSize() {
+		return this.fontSize;
 	}
 	
 	/**
@@ -1933,13 +1921,13 @@ public class Element extends Node {
 			textElement.setSize(fontSize);
 		}
 	}
-	
+
 	/**
-	 * Returns the element's text layer font size
-	 * @return float fontSize
+	 * Return the element's text layer font color
+	 * @return ColorRGBA fontColor
 	 */
-	public float getFontSize() {
-		return this.fontSize;
+	public ColorRGBA getFontColor() {
+		return this.fontColor;
 	}
 	
 	/**
@@ -1952,27 +1940,7 @@ public class Element extends Node {
 			textElement.setColor(fontColor);
 		}
 	}
-	
-	/**
-	 * Return the element's text layer font color
-	 * @return ColorRGBA fontColor
-	 */
-	public ColorRGBA getFontColor() {
-		return this.fontColor;
-	}
-	
-	/**
-	 * Sets the element's text layer horizontal alignment
-	 * 
-	 * @param textAlign 
-	 */
-	public void setTextAlign(BitmapFont.Align textAlign) {
-		this.textAlign = textAlign;
-		if (textElement != null) {
-			textElement.setAlignment(textAlign);
-		}
-	}
-	
+
 	/**
 	 * Returns the element's text layer horizontal alignment
 	 * @return Align text Align
@@ -1982,9 +1950,29 @@ public class Element extends Node {
 	}
 	
 	/**
+	 * Sets the element's text layer horizontal alignment
+	 *
+	 * @param textAlign
+	 */
+	public void setTextAlign(BitmapFont.Align textAlign) {
+		this.textAlign = textAlign;
+		if (textElement != null) {
+			textElement.setAlignment(textAlign);
+		}
+	}
+
+	/**
+	 * Returns the element's text layer vertical alignment
+	 * @return VAlign textVAlign
+	 */
+	public BitmapFont.VAlign getTextVAlign() {
+		return this.textVAlign;
+	}
+	
+	/**
 	 * Sets the element's text layer vertical alignment
-	 * 
-	 * @param textVAlign 
+	 *
+	 * @param textVAlign
 	 */
 	public void setTextVAlign(BitmapFont.VAlign textVAlign) {
 		this.textVAlign = textVAlign;
@@ -1992,13 +1980,13 @@ public class Element extends Node {
 			textElement.setVerticalAlignment(textVAlign);
 		}
 	}
-	
+
 	/**
-	 * Returns the element's text layer vertical alignment
-	 * @return VAlign textVAlign
+	 * Returns the element's text layer wrap mode
+	 * @return LineWrapMode textWrap
 	 */
-	public BitmapFont.VAlign getTextVAlign() {
-		return this.textVAlign;
+	public LineWrapMode getTextWrap() {
+		return this.textWrap;
 	}
 	
 	/**
@@ -2010,14 +1998,6 @@ public class Element extends Node {
 		if (textElement != null) {
 			textElement.setLineWrapMode(textWrap);
 		}
-	}
-	
-	/**
-	 * Returns the element's text layer wrap mode
-	 * @return LineWrapMode textWrap
-	 */
-	public LineWrapMode getTextWrap() {
-		return this.textWrap;
 	}
 	
 	/**
@@ -2039,7 +2019,7 @@ public class Element extends Node {
 	
 	/**
 	 * Sets the padding set for the element's text layer
-	 * @param textPadding 
+	 * @param textPadding
 	 */
 	public void setTextPadding(float textPadding) {
 		setTextPadding(textPadding,textPadding,textPadding,textPadding);
@@ -2049,16 +2029,16 @@ public class Element extends Node {
 		this.textPadding.set(left,right,top,bottom);
 	}
 	
-	public void setTextPadding(Vector4f textPadding) {
-		this.textPadding.set(textPadding);
-	}
-	
 	/**
 	 * Returns the ammount of padding set for the elements text layer
 	 * @return float textPadding
 	 */
 	public float getTextPadding() {
 		return this.textPadding.x;
+	}
+	
+	public void setTextPadding(Vector4f textPadding) {
+		this.textPadding.set(textPadding);
 	}
 	
 	public Vector4f getTextPaddingVec() {
@@ -2088,6 +2068,14 @@ public class Element extends Node {
 			textElement = null;
 		}
 	}
+
+	/**
+	 * Retuns the current visible text of the element.
+	 * @return String text
+	 */
+	public String getText() {
+		return this.text;
+	}
 	
 	/**
 	 * Sets the text of the element.
@@ -2113,17 +2101,9 @@ public class Element extends Node {
 	}
 	
 	/**
-	 * Retuns the current visible text of the element.
-	 * @return String text
-	 */
-	public String getText() {
-		return this.text;
-	}
-	
-	/**
 	 * Returns a pointer to the BitmapText element of this Element.  Returns null
 	 * if setText() has not been called.
-	 * 
+	 *
 	 * @return BitmapText textElement
 	 */
 	public BitmapText getTextElement() {
@@ -2152,10 +2132,9 @@ public class Element extends Node {
 						this.font.getPage(i).setBoolean("UseClipping", false);
 					}
 				}
-			} 
+			}
 		}
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Materials, Textures & Atlas">
 	private void throwParserException() {
@@ -2173,15 +2152,15 @@ public class Element extends Node {
 	 */
 	public void setTextureAtlasImage(Texture tex, String queryString) {
 		this.useLocalTexture = false;
-		
+
 		this.defaultTex = tex;
 		mat.setTexture("ColorMap", tex);
 		mat.setColor("Color", new ColorRGBA(1,1,1,1));
 		mat.setBoolean("UseEffectTexCoords", true);
-		
+
 		this.useLocalAtlas = true;
 		this.atlasCoords = queryString;
-		
+
 		float[] coords = screen.parseAtlasCoords(queryString);
 		float textureAtlasX = coords[0];
 		float textureAtlasY = coords[1];
@@ -2194,14 +2173,15 @@ public class Element extends Node {
 		float pixelHeight = 1f/imgHeight;
 
 		textureAtlasY = imgHeight-textureAtlasY-textureAtlasH;
-		
+
 		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 		geom.setMesh(model);
 	}
+	//</editor-fold>
 	
 	/**
 	 * Returns the current unparsed string representing the Element's atlas image
-	 * @return 
+	 * @return
 	 */
 	public String getAtlasCoords() { return this.atlasCoords; }
 	
@@ -2215,20 +2195,20 @@ public class Element extends Node {
 		float textureAtlasY = coords[1];
 		float textureAtlasW = coords[2];
 		float textureAtlasH = coords[3];
-		
+
 		float imgWidth = defaultTex.getImage().getWidth();
 		float imgHeight = defaultTex.getImage().getHeight();
 		float pixelWidth = 1f/imgWidth;
 		float pixelHeight = 1f/imgHeight;
 
 		textureAtlasY = imgHeight-textureAtlasY-textureAtlasH;
-		
+
 		getModel().updateTexCoords(textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 	}
 	
 	/**
 	 * Returns if the element is using a local texture atlas of the screen defined texture atlas
-	 * @return 
+	 * @return
 	 */
 	public boolean getUseLocalAtlas() { return this.useLocalAtlas; }
 	
@@ -2246,36 +2226,37 @@ public class Element extends Node {
 		float pixelWidth = 1f/imgWidth;
 		float pixelHeight = 1f/imgHeight;
 
-		return new Vector2f( getModel().getEffectOffset( pixelWidth*coords[0], pixelHeight*(imgHeight-coords[1]-coords[3]) ));
+		return new Vector2f(getModel().getEffectOffset(pixelWidth * coords[0], pixelHeight*(imgHeight-coords[1]-coords[3]) ));
 	}
 	
+	public boolean getUseLocalTexture() { return this.useLocalTexture;
+	}
+
 	public void setUseLocalTexture(boolean useLocalTexture) {
 		this.useLocalTexture = useLocalTexture;
 	}
 	
-	public boolean getUseLocalTexture() { return this.useLocalTexture; }
+	public boolean getTileImage() {
+		return this.tileImage;
+	}
 	
 	/**
 	 * Will set the textures WrapMode to repeat if enabled.<br/><br/>
 	 * NOTE: This only works when texture atlasing has not been enabled.
 	 * For info on texture atlas usage, see both:<br/>
-	 * @see Screen#setUseTextureAtlas(boolean enable, String path) 
+	 * @see Screen#setUseTextureAtlas(boolean enable, String path)
 	 * @see #setTextureAtlasImage(Texture tex, String path)
-	 * @param tileImage 
+	 * @param tileImage
 	 */
 	public void setTileImage(boolean tileImage) {
 		this.useLocalTexture = true;
-		
+
 		this.tileImage = tileImage;
 		if (tileImage)
 			((Texture)mat.getParam("ColorMap").getValue()).setWrap(Texture.WrapMode.Repeat);
 		else
 			((Texture)mat.getParam("ColorMap").getValue()).setWrap(Texture.WrapMode.Clamp);
 		setDimensions(dimensions);
-	}
-	
-	public boolean getTileImage() {
-		return this.tileImage;
 	}
 	
 	public void setTileImageByKey(String style, String key) {
@@ -2323,12 +2304,12 @@ public class Element extends Node {
 	
 	/**
 	 * A way to override the default material of the element.
-	 * 
+	 *
 	 * NOTE: It is important that the shader used with the new material is either:
 	 * A: The provided Unshaded material contained with this library, or
-	 * B: The custom shader contains the caret, text range, clipping and effect 
+	 * B: The custom shader contains the caret, text range, clipping and effect
 	 *    handling provided in the default shader.
-	 * 
+	 *
 	 * @param mat The Material to use for rendering this Element.
 	 */
 	public void setLocalMaterial(Material mat) {
@@ -2337,29 +2318,33 @@ public class Element extends Node {
 	}
 	
 	/**
+	 * Returns a pointer to the Material used for rendering this Element.
+	 *
+	 * @return Material mat
+	 */
+	public Material getElementMaterial() {
+		return this.mat;
+	}
+
+	/**
 	 * Returns the default material for the element
-	 * @param mat 
+	 * @param mat
 	 */
 	public void setElementMaterial(Material mat) {
 		this.mat = mat;
 	}
 	
 	/**
-	 * Returns a pointer to the Material used for rendering this Element.
-	 * 
-	 * @return Material mat
-	 */
-	public Material getElementMaterial() {
-		return this.mat;
-	}
-	
-	/**
 	 * Returns the default Texture for the Element
-	 * 
+	 *
 	 * @return Texture defaultTexture
 	 */
 	public Texture getElementTexture() {
 		return this.defaultTex;
+	}
+	
+	public Texture getAlphaMap() {
+		return this.alphaMap;
 	}
 	
 	/**
@@ -2379,9 +2364,9 @@ public class Element extends Node {
 			alpha.setMagFilter(Texture.MagFilter.Nearest);
 			alpha.setWrap(Texture.WrapMode.Clamp);
 		}
-		
+
 		this.alphaMap = alpha;
-		
+
 		if (defaultTex == null) {
 			if (!screen.getUseTextureAtlas() || useLocalTexture) {
 				float imgWidth = alpha.getImage().getWidth();
@@ -2398,25 +2383,21 @@ public class Element extends Node {
 				float textureAtlasY = coords[1];
 				float textureAtlasW = coords[2];
 				float textureAtlasH = coords[3];
-				
+
 				float imgWidth = alpha.getImage().getWidth();
 				float imgHeight = alpha.getImage().getHeight();
 				float pixelWidth = 1f/imgWidth;
 				float pixelHeight = 1f/imgHeight;
-				
+
 				textureAtlasY = imgHeight-textureAtlasY-textureAtlasH;
-				
+
 				model = new ElementQuadGrid(this.getDimensions(), borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
-				
+
 				geom.setMesh(model);
 				mat.setVector2("OffsetAlphaTexCoord", new Vector2f(0,0));
 			}
 		}
 		mat.setTexture("AlphaMap", alpha);
-	}
-	
-	public Texture getAlphaMap() {
-		return this.alphaMap;
 	}
 	
 	public void setColorMap(String colorMap) {
@@ -2430,9 +2411,9 @@ public class Element extends Node {
 			color.setMagFilter(Texture.MagFilter.Nearest);
 			color.setWrap(Texture.WrapMode.Clamp);
 		}
-		
+
 		this.defaultTex = color;
-		
+
 		if (!screen.getUseTextureAtlas() || useLocalTexture) {
 			float imgWidth = color.getImage().getWidth();
 			float imgHeight = color.getImage().getHeight();
@@ -2460,7 +2441,7 @@ public class Element extends Node {
 
 			geom.setMesh(model);
 		}
-		
+
 		mat.setTexture("ColorMap", color);
 		mat.setColor("Color", ColorRGBA.White);
 	}
@@ -2492,13 +2473,11 @@ public class Element extends Node {
 			geom.setMesh(model);
 		}
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Visibility">
 	/**
 	 * This may be remove soon and probably should not be used as the method of handling
 	 * hide show was updated making this unnecissary.
-	 * 
+	 *
 	 * @param wasVisible boolean
 	 */
 	public void setDefaultWasVisible(boolean wasVisible) {
@@ -2523,10 +2502,13 @@ public class Element extends Node {
 		} else
 			this.show();
 	}
+	//</editor-fold>
 	
+	//<editor-fold desc="Visibility">
+
 	/**
 	 * Sets this Element and any Element contained within it's nesting order to visible.
-	 * 
+	 *
 	 * NOTE: Hide and Show relies on shader-based clipping
 	 */
 	public void show() {
@@ -2537,10 +2519,10 @@ public class Element extends Node {
 		//	updateClipping();
 			updateClippingLayers();
 			controlShowHook();
-			
+
 			if (getTextElement() != null)
 				getTextElement().setAlpha(1f);
-			
+
 			if (getParent() == null) {
 				if (getElementParent() != null) {
 					getElementParent().attachChild(this);
@@ -2548,7 +2530,7 @@ public class Element extends Node {
 					screen.getGUINode().attachChild(this);
 				}
 			}
-			
+
 			for (Element el : elementChildren.values()) {
 				el.childShow();
 			}
@@ -2568,7 +2550,7 @@ public class Element extends Node {
 	public void childShow() {
 		if (getTextElement() != null)
 			getTextElement().setAlpha(1f);
-		
+
 		this.isVisible = wasVisible;
 		this.isClipped = wasClipped;
 	//	updateClipping();
@@ -2603,11 +2585,11 @@ public class Element extends Node {
 		} else
 			this.hide();
 	}
-	
+
 	/**
-	 * Recursive call that sets this Element and any Element contained within it's 
+	 * Recursive call that sets this Element and any Element contained within it's
 	 * nesting order to hidden.
-	 * 
+	 *
 	 * NOTE: Hide and Show relies on shader-based clipping
 	 */
 	public void hide() {
@@ -2619,7 +2601,7 @@ public class Element extends Node {
 			this.wasVisible = isVisible;
 			this.isVisible = false;
 			this.isClipped = true;
-			
+
 			if (screen.getUseToolTips())
 				if (screen.getToolTipFocus() == this)
 					screen.hideToolTip();
@@ -2641,7 +2623,7 @@ public class Element extends Node {
 			this.wasVisible = isVisible;
 			this.isVisible = false;
 			this.isClipped = true;
-			
+
 			if (screen.getUseToolTips())
 				if (screen.getToolTipFocus() == this)
 					screen.hideToolTip();
@@ -2651,18 +2633,6 @@ public class Element extends Node {
 		controlHideHook();
 		for (Element el : elementChildren.values()) {
 			el.childHide();
-		}
-	}
-	
-	/**
-	 * Hides or shows the element (true = show, false = hide)
-	 * @param visibleState 
-	 */
-	public void setIsVisible(boolean visibleState) {
-		if (visibleState) {
-			show();
-		} else {
-			hide();
 		}
 	}
 	
@@ -2681,13 +2651,24 @@ public class Element extends Node {
 	
 	/**
 	 * Return if the Element is visible
-	 * 
+	 *
 	 * @return boolean isVisible
 	 */
 	public boolean getIsVisible() {
 		return this.isVisible;
 	}
-	//</editor-fold>
+
+	/**
+	 * Hides or shows the element (true = show, false = hide)
+	 * @param visibleState
+	 */
+	public void setIsVisible(boolean visibleState) {
+		if (visibleState) {
+			show();
+		} else {
+			hide();
+		}
+	}
 	
 	//<editor-fold desc="Cleanup">
 	public void cleanup() {
@@ -2696,15 +2677,81 @@ public class Element extends Node {
 			el.cleanup();
 		}
 	}
+	
 	/**
 	 * An overridable method for handling control specific cleanup.
 	 */
 	public void controlCleanupHook() {  }
 	//</editor-fold>
 	
-	//<editor-fold desc="Clipping">
 	/**
 	 * Sets the elements clipping layer to the provided element.
+	 * @param clippingLayer The element that provides the clipping boundaries.
+	 */
+	@Deprecated
+	public void setSecondaryClippingLayer(Element secondaryClippingLayer) {
+		if (secondaryClippingLayer != null)
+			addClippingLayer(secondaryClippingLayer);
+		else
+			removeClippingLayer(secondaryClippingLayer);
+		/*
+		if (secondaryClippingLayer != null) {
+			this.secondaryClippingLayer = secondaryClippingLayer;
+		} else {
+			this.secondaryClippingLayer = null;
+		}
+		*/
+	}
+
+	/**
+	 * Recursive update of all child Elements clipping layer
+	 * @param clippingLayer The clipping layer to apply
+	 */
+	@Deprecated
+	public void setControlClippingLayer(Element clippingLayer) {
+		setClippingLayer(clippingLayer);
+		//	for (Element el : elementChildren.values()) {
+	//		el.setControlClippingLayer(clippingLayer);
+		//	}
+	}
+	//</editor-fold>
+
+	//<editor-fold desc="Clipping">
+
+	/**
+	 * Recursive update of all child Elements clipping & secondary clipping layers
+	 * @param clippingLayer The clipping layer to apply
+	 * @param secondaryClippingLayer The clipping layer's parent clipping layer to apply
+	 */
+	@Deprecated
+	public void setControlClippingLayer(Element clippingLayer, Element secondaryClippingLayer) {
+		setClippingLayer(clippingLayer);
+		setSecondaryClippingLayer(secondaryClippingLayer);
+		for (Element el : elementChildren.values()) {
+			el.setControlClippingLayer(clippingLayer, secondaryClippingLayer);
+		}
+	}
+	
+	/**
+	 * Returns if the Element's clipping layer has been set
+	 *
+	 * @return boolean isClipped
+	 */
+	public boolean getIsClipped() {
+		return isClipped;
+	}
+	
+	/**
+	 * Returns the elements clipping layer or null is element doesn't use clipping
+	 * @return Element clippingLayer
+	 */
+	public Element getClippingLayer() {
+		return this.clippingLayer;
+	}
+
+	/**
+	 * Sets the elements clipping layer to the provided element.
+	 *
 	 * @param clippingLayer The element that provides the clipping boundaries.
 	 */
 	@Deprecated
@@ -2726,68 +2773,6 @@ public class Element extends Node {
 			this.mat.setBoolean("UseClipping", false);
 		}
 		*/
-	}
-	
-	/**
-	 * Sets the elements clipping layer to the provided element.
-	 * @param clippingLayer The element that provides the clipping boundaries.
-	 */
-	@Deprecated
-	public void setSecondaryClippingLayer(Element secondaryClippingLayer) {
-		if (secondaryClippingLayer != null)
-			addClippingLayer(secondaryClippingLayer);
-		else
-			removeClippingLayer(secondaryClippingLayer);
-		/*
-		if (secondaryClippingLayer != null) {
-			this.secondaryClippingLayer = secondaryClippingLayer;
-		} else {
-			this.secondaryClippingLayer = null;
-		}
-		*/
-	}
-	
-	/**
-	 * Recursive update of all child Elements clipping layer
-	 * @param clippingLayer The clipping layer to apply
-	 */
-	@Deprecated
-	public void setControlClippingLayer(Element clippingLayer) {
-		setClippingLayer(clippingLayer);
-	//	for (Element el : elementChildren.values()) {
-	//		el.setControlClippingLayer(clippingLayer);
-	//	}
-	}
-	
-	/**
-	 * Recursive update of all child Elements clipping & secondary clipping layers
-	 * @param clippingLayer The clipping layer to apply
-	 * @param secondaryClippingLayer The clipping layer's parent clipping layer to apply
-	 */
-	@Deprecated
-	public void setControlClippingLayer(Element clippingLayer, Element secondaryClippingLayer) {
-		setClippingLayer(clippingLayer);
-		setSecondaryClippingLayer(secondaryClippingLayer);
-		for (Element el : elementChildren.values()) {
-			el.setControlClippingLayer(clippingLayer, secondaryClippingLayer);
-		}
-	}
-	
-	/**
-	 * Returns if the Element's clipping layer has been set
-	 * 
-	 * @return boolean isClipped
-	 */
-	public boolean getIsClipped() {
-		return isClipped;
-	}
-	
-	/**
-	 * Returns the elements clipping layer or null is element doesn't use clipping
-	 * @return Element clippingLayer
-	 */
-	public Element getClippingLayer() {
-		return this.clippingLayer;
 	}
 	
 	/**
@@ -2815,18 +2800,18 @@ public class Element extends Node {
 		);
 	}
 	
-	public void setClipPadding(Vector4f clipPadding) {
-		this.clipPadding.set(
-			clipPadding
-		);
-	}
-	
 	/**
 	 * Returns the current clipPadding
 	 * @return float clipPadding
 	 */
 	public float getClipPadding() {
 		return clipPadding.x;
+	}
+
+	public void setClipPadding(Vector4f clipPadding) {
+		this.clipPadding.set(
+			clipPadding
+		);
 	}
 	
 	public Vector4f getClipPaddingVec() {
@@ -2835,7 +2820,7 @@ public class Element extends Node {
 	
 	/**
 	 * Shrinks the clipping area by set number of pixels
-	 * 
+	 *
 	 * @param textClipPadding The number of pixels to pad the clipping area with on each side
 	 */
 	public void setTextClipPadding(float textClipPadding) {
@@ -2849,15 +2834,15 @@ public class Element extends Node {
 			clipLeft, clipTop, clipRight, clipBottom
 		);
 	}
+
+	public float getTextClipPadding() {
+		return textClipPadding.x;
+	}
 	
 	public void setTextClipPadding(Vector4f textClipPadding) {
 		this.textClipPadding.set(
 			textClipPadding
 		);
-	}
-	
-	public float getTextClipPadding() {
-		return textClipPadding.x;
 	}
 	
 	public Vector4f getTextClipPaddingVec() {
@@ -2866,7 +2851,7 @@ public class Element extends Node {
 	
 	/**
 	 * Updates the clipping bounds for any element that has a clipping layer
-	 * 
+	 *
 	 * See updateLocalClipping
 	 */
 	@Deprecated
@@ -2901,7 +2886,7 @@ public class Element extends Node {
 					float sclW = secondaryClippingLayer.getAbsoluteWidth();
 					float clH = clippingLayer.getAbsoluteHeight();
 					float sclH = secondaryClippingLayer.getAbsoluteHeight();
-					
+
 					clippingBounds.set(
 						(clX > sclX) ? clX+clipPadding.x : sclX+clipPadding.x,
 						(clY > sclY) ? clY+clipPadding.y : sclY+clipPadding.y,
@@ -2938,7 +2923,7 @@ public class Element extends Node {
 	
 	public ClippingDefine getClippingDefine(Element el) {
 		ClippingDefine def = null;
-		
+
 		for (ClippingDefine d : clippingLayers) {
 			if (d.getElement() == el) {
 				def = d;
@@ -3009,7 +2994,7 @@ public class Element extends Node {
 		float cY = 0;
 		float cW = screen.getWidth();
 		float cH = screen.getHeight();
-		
+
 		for (ClippingDefine def : clippingLayers) {
 			clipTest.set(def.getClipping());
 			if (def.getElement() != this) {
@@ -3043,46 +3028,11 @@ public class Element extends Node {
 		mat.setVector4("Clipping", clippingBounds);
 	}
 	
-	public class ClippingDefine {
-		public Element owner;
-		public Vector4f clip = null;
-		private Vector4f tempV4 = new Vector4f();
-		
-		public ClippingDefine(Element owner) {
-			this.owner = owner;
-		}
-		public ClippingDefine(Element owner, Vector4f clip) {
-			this.owner = owner;
-			this.clip = new Vector4f(clip);
-		}
-		public Element getElement() { return owner; }
-		public Vector4f getClipping() {
-			if (clip == null) {
-				tempV4.setX(owner.getAbsoluteX());
-				tempV4.setY(owner.getAbsoluteY());
-				tempV4.setZ(tempV4.getX()+owner.getWidth());
-				tempV4.setW(tempV4.getY()+owner.getHeight());
-			} else {
-				float x = owner.getAbsoluteX();
-				float y = owner.getAbsoluteY();
-				tempV4.set(
-					x+clip.x,
-					y+clip.y,
-					x+clip.z,
-					y+clip.w
-				);
-			}
-			return tempV4;
-		}
-	}
-	//</editor-fold>
-	
-	//<editor-fold desc="Effects">
 	/**
 	 * Associates an Effect with this Element.  Effects are not automatically associated
 	 * with the specified event, but instead, the event type is used to retrieve the Effect
 	 * at a later point
-	 * 
+	 *
 	 * @param effectEvent The Effect.EffectEvent the Effect is to be registered with
 	 * @param effect The Effect to store
 	 */
@@ -3094,7 +3044,7 @@ public class Element extends Node {
 	 * Associates an Effect with this Element.  Effects are not automatically associated
 	 * with the specified event, but instead, the event type is used to retrieve the Effect
 	 * at a later point
-	 * 
+	 *
 	 * @param effect The Effect to store
 	 */
 	public void addEffect(Effect effect) {
@@ -3107,15 +3057,18 @@ public class Element extends Node {
 	
 	/**
 	 * Removes the Effect associated with the Effect.EffectEvent specified
-	 * @param effectEvent 
+	 * @param effectEvent
 	 */
 	public void removeEffect(Effect.EffectEvent effectEvent) {
 		effects.remove(effectEvent);
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Effects">
+
 	/**
 	 * Retrieves the Effect associated with the specified Effect.EffectEvent
-	 * 
+	 *
 	 * @param effectEvent
 	 * @return effect
 	 */
@@ -3128,7 +3081,7 @@ public class Element extends Node {
 	
 	/**
 	 * Called by controls during construction to prepopulate effects based on Styles.
-	 * 
+	 *
 	 * @param styleName The String identifier of the Style
 	 */
 	protected void populateEffects(String styleName) {
@@ -3156,12 +3109,10 @@ public class Element extends Node {
 			el.propagateEffect(effect, false);
 		}
 	}
-	//</editor-fold>
 	
-	//<editor-fold desc="Alpha">
 	/**
 	 * Overrides the screen global alpha with the specified value. setIngoreGlobalAlpha must be enabled prior to calling this method.
-	 * @param globalAlpha 
+	 * @param globalAlpha
 	 */
 	public void setGlobalAlpha(float globalAlpha) {
 		if (!ignoreGlobalAlpha) {
@@ -3176,22 +3127,12 @@ public class Element extends Node {
 	
 	/**
 	 * Will enable or disable the use of the screen defined global alpha setting.
-	 * @param ignoreGlobalAlpha 
+	 * @param ignoreGlobalAlpha
 	 */
 	public void setIgnoreGlobalAlpha(boolean ignoreGlobalAlpha) {
 		this.ignoreGlobalAlpha = ignoreGlobalAlpha;
 	}
-	//</editor-fold>
-	
-	//<editor-fold desc="Focus">
-	/**
-	 * For use by the Form control (Do not call this method directly)
-	 * @param form The form the Element has been added to
-	 */
-	public void setForm(Form form) {
-		this.form = form;
-	}
-	
+
 	/**
 	 * Returns the form the Element is controlled by
 	 * @return Form form
@@ -3199,15 +3140,18 @@ public class Element extends Node {
 	public Form getForm() {
 		return this.form;
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Alpha">
+
 	/**
-	 * Sets the tab index (This is assigned by the Form control. Do not call this method directly)
-	 * @param tabIndex The tab index assigned to the Element
+	 * For use by the Form control (Do not call this method directly)
+	 * @param form The form the Element has been added to
 	 */
-	public void setTabIndex(int tabIndex) {
-		this.tabIndex = tabIndex;
+	public void setForm(Form form) {
+		this.form = form;
 	}
-	
+
 	/**
 	 * Returns the tab index assigned by the Form control
 	 * @return tabIndex
@@ -3215,7 +3159,25 @@ public class Element extends Node {
 	public int getTabIndex() {
 		return tabIndex;
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="Focus">
+
+	/**
+	 * Sets the tab index (This is assigned by the Form control. Do not call this method directly)
+	 * @param tabIndex The tab index assigned to the Element
+	 */
+	public void setTabIndex(int tabIndex) {
+		this.tabIndex = tabIndex;
+	}
+
+	/**
+	 * Returns if the Element currently has input focus
+	 * @return
+	 */
+	public boolean getHasFocus() {
+		return this.hasFocus;
+	}
 	
 	/**
 	 * For internal use - DO NOT CALL THIS METHOD
@@ -3224,22 +3186,13 @@ public class Element extends Node {
 	public void setHasFocus(boolean hasFocus) {
 		this.hasFocus = hasFocus;
 	}
-	
-	/**
-	 * Returns if the Element currently has input focus
-	 * @return 
-	 */
-	public boolean getHasFocus() {
-		return this.hasFocus;
-	}
+
+	public boolean getResetKeyboardFocus() {
+		return this.resetKeyboardFocus; }
 	
 	public void setResetKeyboardFocus(boolean resetKeyboardFocus) {
 		this.resetKeyboardFocus = resetKeyboardFocus;
 	}
-	
-	public boolean getResetKeyboardFocus() { return this.resetKeyboardFocus; }
-	
-	//</editor-fold>
 	
 	// Off Screen Rendering Bridge
 	public void addOSRBridge(OSRBridge bridge) {
@@ -3249,7 +3202,14 @@ public class Element extends Node {
 		getElementMaterial().setColor("Color", ColorRGBA.White);
 	}
 	
-	//<editor-fold desc="Tool Tips">
+	/**
+	 * Returns the Element's current ToolTip text
+	 * @return String
+	 */
+	public String getToolTipText() {
+		return toolTipText;
+	}
+
 	/**
 	 * Sets the Element's ToolTip text
 	 * @param toolTip String
@@ -3258,24 +3218,8 @@ public class Element extends Node {
 		this.toolTipText = toolTip;
 	}
 	
-	/**
-	 * Returns the Element's current ToolTip text
-	 * @return String
-	 */
-	public String getToolTipText() {
-		return toolTipText;
-	}
 	//</editor-fold>
-	
-	//<editor-fold desc="Modal">
-	/**
-	 * Enables standard modal mode for the Element.
-	 * @param isModal 
-	 */
-	public void setIsModal(boolean isModal) {
-		this.isModal = isModal;
-	}
-	
+
 	/**
 	 * Returns if the Element is currently modal
 	 * @return Ret
@@ -3283,13 +3227,15 @@ public class Element extends Node {
 	public boolean getIsModal() {
 		return this.isModal;
 	}
-	
+
+	//<editor-fold desc="Tool Tips">
+
 	/**
-	 * For internal use - DO NOT CALL THIS METHOD
-	 * @param hasFocus boolean
+	 * Enables standard modal mode for the Element.
+	 * @param isModal
 	 */
-	public void setIsGlobalModal(boolean isGlobalModal) {
-		this.isGlobalModal = isGlobalModal;
+	public void setIsModal(boolean isModal) {
+		this.isModal = isModal;
 	}
 	
 	/**
@@ -3300,14 +3246,15 @@ public class Element extends Node {
 		return this.isGlobalModal;
 	}
 	//</editor-fold>
-	
-	//<editor-fold desc="User Data">
+
+	//<editor-fold desc="Modal">
+
 	/**
-	 * Stores provided data with the Element
-	 * @param elementUserData Object Data to store
+	 * For internal use - DO NOT CALL THIS METHOD
+	 * @param hasFocus boolean
 	 */
-	public void setElementUserData(Object elementUserData) {
-		this.elementUserData = elementUserData;
+	public void setIsGlobalModal(boolean isGlobalModal) {
+		this.isGlobalModal = isGlobalModal;
 	}
 	
 	/**
@@ -3317,39 +3264,51 @@ public class Element extends Node {
 	public Object getElementUserData() {
 		return this.elementUserData;
 	}
-	//</editor-fold>
+
+	/**
+	 * Stores provided data with the Element
+	 * @param elementUserData Object Data to store
+	 */
+	public void setElementUserData(Object elementUserData) {
+		this.elementUserData = elementUserData;
+	}
 	
-	Vector2f origin = new Vector2f(0,0);
 	/**
 	 * Stubbed for future use
 	 * @param originX
-	 * @param originY 
+	 * @param originY
 	 */
 	public void setOrigin(float originX, float originY) {
 		origin.set(originX, originY);
 	}
-	
+	//</editor-fold>
+
+	//<editor-fold desc="User Data">
+
 	/**
 	 * Stubbed for future use.
-	 * @return 
+	 * @return
 	 */
 	public Vector2f getOrigin() {
 		return this.origin;
 	}
-	
+
+	public Layout getLayout() {
+		return this.layout; }
+	//</editor-fold>
+
 	//<editor-fold desc="Layouts">
 	public void setLayout(Layout layout) {
 		this.layout = layout;
 		this.layout.setOwner(this);
 	}
-	
-	public Layout getLayout() { return this.layout; }
+
+	public LayoutHints getLayoutHints() {
+		return this.layoutHints; }
 	
 	public void setLayoutHints(LayoutHints layoutHints) {
 		this.layoutHints = layoutHints;
 	}
-	
-	public LayoutHints getLayoutHints() { return this.layoutHints; }
 	
 	public void layoutChildren() {
 		if (layout != null) {
@@ -3357,6 +3316,91 @@ public class Element extends Node {
 		}
 		for (Element el : elementChildren.values()) {
 			el.layoutChildren();
+		}
+	}
+
+	public static enum Borders {
+		NW,
+		N,
+		NE,
+		W,
+		E,
+		SW,
+		S,
+		SE;
+	}
+
+	/**
+	 * Some controls provide different layout's based on the orientation of the control
+	 */
+	public static enum Orientation {
+		/**
+		 * Vertical layout
+		 */
+		VERTICAL,
+		/**
+		 * Horizontal layout
+		 */
+		HORIZONTAL
+	}
+
+	/**
+	 * Defines how the element will dock to it's parent element during resize events
+	 */
+	public static enum Docking {
+		/**
+		 * Docks to the top left of parent
+		 */
+		NW,
+		/**
+		 * Docks to the top right of parent
+		 */
+		NE,
+		/**
+		 * Docks to the bottom left of parent
+		 */
+		SW,
+		/**
+		 * Docks to the bottom right of parent
+		 */
+		SE
+	}
+
+	public class ClippingDefine {
+		public Element owner;
+		public Vector4f clip = null;
+		private Vector4f tempV4 = new Vector4f();
+
+		public ClippingDefine(Element owner) {
+			this.owner = owner;
+		}
+
+		public ClippingDefine(Element owner, Vector4f clip) {
+			this.owner = owner;
+			this.clip = new Vector4f(clip);
+		}
+
+		public Element getElement() {
+			return owner;
+		}
+
+		public Vector4f getClipping() {
+			if (clip == null) {
+				tempV4.setX(owner.getAbsoluteX());
+				tempV4.setY(owner.getAbsoluteY());
+				tempV4.setZ(tempV4.getX() + owner.getWidth());
+				tempV4.setW(tempV4.getY() + owner.getHeight());
+			} else {
+				float x = owner.getAbsoluteX();
+				float y = owner.getAbsoluteY();
+				tempV4.set(
+						x + clip.x,
+						y + clip.y,
+						x + clip.z,
+						y + clip.w
+				);
+			}
+			return tempV4;
 		}
 	}
 	//</editor-fold>

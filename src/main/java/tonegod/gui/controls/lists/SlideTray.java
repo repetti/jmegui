@@ -10,8 +10,6 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
@@ -19,6 +17,9 @@ import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.BatchEffect;
 import tonegod.gui.effects.Effect;
 import tonegod.gui.framework.core.util.GameTimer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -32,36 +33,24 @@ public class SlideTray extends Element {
 	}
 	*/
 	
-	public static enum ZOrderSort {
-		FIRST_TO_LAST,
-		LAST_TO_FIRST
-	}
-	private Orientation orientation;
-	
-	private ZOrderSort sort = ZOrderSort.FIRST_TO_LAST;
-	
 	protected ButtonAdapter btnPrevElement, btnNextElement;
-	private Element elTray;
-	private float btnSize;
-	
 	protected List<Element> trayElements = new ArrayList();
 	protected int currentElementIndex = 0;
-	
 	protected float trayPadding = 5;
-	
+	private Orientation orientation;
+	private ZOrderSort sort = ZOrderSort.FIRST_TO_LAST;
+	private Element elTray;
+	private float btnSize;
 	private boolean useSlideEffect = false;
 	private Effect slideEffect;
-	
 	private BatchEffect batch = null;
 	private GameTimer timer;
-	
 	private float currentOffset = 0;
 	private float currentPosition = 0;
 	private float lastOffset = 0;
-	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param orientation The orientation of the SlideTray
 	 */
@@ -76,7 +65,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param orientation The orientation of the SlideTray
@@ -92,7 +81,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -108,7 +97,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -122,7 +111,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -139,7 +128,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -156,7 +145,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Creates a new instance of the SlideTray control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -168,9 +157,9 @@ public class SlideTray extends Element {
 	public SlideTray(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg, Orientation orientation) {
 		super(screen, UID, position, dimensions, resizeBorders, null);
 		this.orientation = orientation;
-		
+
 		this.setDocking(Docking.NW);
-		
+
 		if (orientation == Orientation.HORIZONTAL) {
 			this.setScaleEW(true);
 			this.setScaleNS(false);
@@ -179,24 +168,24 @@ public class SlideTray extends Element {
 			this.setScaleNS(true);
 		}
 //		this.setAsContainerOnly();
-		
+
 		initControl();
 	}
 	
 	private void initControl() {
 		btnSize = screen.getStyle("Button").getVector2f("defaultSize").y;
-				
+
 		slideEffect = new Effect(Effect.EffectType.SlideTo, Effect.EffectEvent.Show, .25f);
-                
+
                 // Note to tonegod
-                
+
                 // Must take longer than the slide itself or the buttons will still be
                 // in the right place.
                 //
                 // Is there no way to execute code when an event finishes instead of
                 // relying on a separate timed event?
-                // 
-                // Rockfire
+		//
+		// Rockfire
 		timer = new GameTimer(.26f) {
 			@Override
 			public void onComplete(float time) {
@@ -207,7 +196,7 @@ public class SlideTray extends Element {
 				hideShowButtons();
 			}
 		};
-		
+
 		Vector2f pos = new Vector2f();
 		Vector2f dim = new Vector2f();
 		if (orientation == Orientation.HORIZONTAL) {
@@ -217,7 +206,7 @@ public class SlideTray extends Element {
 			pos.set(0,-btnSize);
 			dim.set(getWidth(),btnSize);
 		}
-			
+
 		btnPrevElement = new ButtonAdapter(screen, getUID() + ":btnPrevElement",
 			pos, dim, Vector4f.ZERO, null
 		) {
@@ -237,13 +226,13 @@ public class SlideTray extends Element {
 		btnPrevElement.setDocking(Docking.SW);
 		btnPrevElement.setScaleEW(false);
 		btnPrevElement.setScaleNS(false);
-		
+
 		if (orientation == Orientation.HORIZONTAL) {
 			pos.set(getWidth(),0);
 		} else {
 			pos.set(0,getHeight());
 		}
-		
+
 		btnNextElement = new ButtonAdapter(screen, getUID() + ":btnNextElement",
 			pos, dim, Vector4f.ZERO, null
 		) {
@@ -266,7 +255,7 @@ public class SlideTray extends Element {
 			btnNextElement.setDocking(Docking.SW);
 		btnNextElement.setScaleEW(false);
 		btnNextElement.setScaleNS(false);
-		
+
 		elTray = new Element(screen, getUID() + ":elTray",
 			new Vector2f(0,0),
 			new Vector2f(getWidth(), getHeight()),
@@ -302,7 +291,7 @@ public class SlideTray extends Element {
 			elTray.setScaleNS(true);
 		}
 		elTray.setAsContainerOnly();
-		
+
 		addChild(elTray);
 		addChild(btnPrevElement);
 		addChild(btnNextElement);
@@ -332,7 +321,7 @@ public class SlideTray extends Element {
 		} else if (vAlign == VAlign.Center) {
 			btnPrevElement.setY(0);
 			btnNextElement.setY(0);
-		}	
+		}
 	}
 	
 	public void alignButtonsH(Align align) {
@@ -345,7 +334,7 @@ public class SlideTray extends Element {
 		} else if (align == Align.Left) {
 			btnPrevElement.setX(0);
 			btnNextElement.setX(0);
-		}	
+		}
 	}
 	
 	public void setZOrderSorting(ZOrderSort sort) {
@@ -374,13 +363,13 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Returns the current slide tray padding value
-	 * @return 
+	 * @return
 	 */
 	public float getTrayPadding() { return this.trayPadding; }
 	
 	/**
 	 * Sets the padding between slide tray elements
-	 * @param trayPadding 
+	 * @param trayPadding
 	 */
 	public void setTrayPadding(float trayPadding) {
 		this.trayPadding = trayPadding;
@@ -388,7 +377,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Enables/disables the use of the SlideTo effect when using next/previous buttons
-	 * @param useSlideEffect 
+	 * @param useSlideEffect
 	 */
 	public void setUseSlideEffect(boolean useSlideEffect) {
 		this.useSlideEffect = useSlideEffect;
@@ -396,7 +385,7 @@ public class SlideTray extends Element {
 	
 	/**
 	 * Adds the provided Element as a tray item
-	 * @param element 
+	 * @param element
 	 */
 	public void addTrayElement(Element element) {
 		if (orientation == Orientation.HORIZONTAL) {
@@ -458,7 +447,7 @@ public class SlideTray extends Element {
 		float diff;
 		Element el = trayElements.get(trayElements.size()-1);
 		if (orientation == Orientation.HORIZONTAL) {
-			diff = (dir) ? 
+			diff = (dir) ?
 				(int)(trayElements.get(currentElementIndex).getWidth()+trayPadding) :
 				(int)(trayElements.get(currentElementIndex-1).getWidth()+trayPadding);
 			if (dir) {
@@ -475,7 +464,7 @@ public class SlideTray extends Element {
 				}
 			}
 		} else {
-			diff = (dir) ? 
+			diff = (dir) ?
 				(int)(trayElements.get(currentElementIndex).getHeight()+trayPadding) :
 				(int)(trayElements.get(currentElementIndex-1).getHeight()+trayPadding);
 			if (dir) {
@@ -565,5 +554,10 @@ public class SlideTray extends Element {
 	@Override
 	public void setControlClippingLayer(Element clippingLayer) {
 		addClippingLayer(clippingLayer);
+	}
+
+	public static enum ZOrderSort {
+		FIRST_TO_LAST,
+		LAST_TO_FIRST
 	}
 }

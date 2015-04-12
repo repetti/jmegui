@@ -11,8 +11,6 @@ import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.CheckBox;
 import tonegod.gui.controls.scrolling.ScrollArea;
 import tonegod.gui.core.Element;
@@ -25,17 +23,16 @@ import tonegod.gui.listeners.MouseButtonListener;
 import tonegod.gui.listeners.MouseMovementListener;
 import tonegod.gui.listeners.MouseWheelListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class Menu extends ScrollArea implements AutoHide, MouseMovementListener, MouseWheelListener, MouseButtonListener {
-	private List<MenuItem> menuItems = new ArrayList();
-	private Element highlight;
-	private float initWidth;
 	protected float menuItemHeight;
 	protected Vector4f menuPadding = new Vector4f(4,4,4,4);
-	private Menu caller;
 	protected Element callerElement;
 	protected float menuOverhang;
 	protected boolean isScrollable;
@@ -45,6 +42,10 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 	protected Vector2f preferredSize = Vector2f.ZERO;
 	protected boolean hasSubMenus = false;
 	protected boolean hasToggleItems = false;
+	private List<MenuItem> menuItems = new ArrayList();
+	private Element highlight;
+	private float initWidth;
+	private Menu caller;
 	
 	/**
 	 * Creates a new instance of the Menu control
@@ -392,14 +393,7 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 			pack();
 		}
 	}
-	/**
-	 * Defines the number of pixels this Menu should overhang it's parent Menu when called as a Sub-Menu
-	 * @param menuOverhang 
-	 */
-	public void setMenuOverhang(float menuOverhang) {
-		this.menuOverhang = menuOverhang;
-	}
-	
+
 	/**
 	 * Returns the number of pixels this Menu should overhang it's parent Menu when called as a Sub-Menu
 	 * @return float
@@ -408,6 +402,14 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 		return this.menuOverhang;
 	}
 	
+	/**
+	 * Defines the number of pixels this Menu should overhang it's parent Menu when called as a Sub-Menu
+	 * @param menuOverhang
+	 */
+	public void setMenuOverhang(float menuOverhang) {
+		this.menuOverhang = menuOverhang;
+	}
+
 	/**
 	 * Returns the display height of a single MenuItem
 	 * @return float
@@ -602,19 +604,19 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 	}
 	
 	/**
+	 * Returns the current Element waiting notification
+	 * @return
+	 */
+	public Element getCallerElement() {
+		return this.callerElement;
+	}
+
+	/**
 	 * Notifies the Menu that is has been called by an Element that is expecting notification of menu item clicks
 	 * @param el Element
 	 */
 	public final void setCallerElement(Element el) {
 		this.callerElement = el;
-	}
-	
-	/**
-	 * Returns the current Element waiting notification
-	 * @return 
-	 */
-	public Element getCallerElement() {
-		return this.callerElement;
 	}
 	
 	/**
@@ -730,11 +732,15 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 			}
 		}
 	}
+
+	public Element getHighlight() {
+		return highlight;
+	}
 	
 	/**
 	 * Sets the highlight Element's current position to the Y position of the supplied
 	 * MenuItem index
-	 * 
+	 *
 	 * @param index int
 	 */
 	public void setHighlight(int index) {
@@ -742,10 +748,6 @@ public abstract class Menu extends ScrollArea implements AutoHide, MouseMovement
 		if (highlight.getParent() == null)
 			this.attachChild(highlight);
 		highlight.setY(scrollableArea.getHeight()+scrollableArea.getY()-(index*menuItemHeight)-menuItemHeight - menuPadding.z);
-	}
-	
-	public Element getHighlight() {
-		return highlight;
 	}
 	
 	@Override

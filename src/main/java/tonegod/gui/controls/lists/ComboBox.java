@@ -7,12 +7,8 @@ package tonegod.gui.controls.lists;
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
 import com.jme3.input.event.MouseButtonEvent;
-import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.menuing.Menu;
 import tonegod.gui.controls.menuing.MenuItem;
@@ -20,30 +16,30 @@ import tonegod.gui.controls.text.TextField;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class ComboBox extends TextField {
 	protected ButtonAdapter btnArrowDown;
-	private Menu DDList = null;
+	protected boolean selectEnabled = true;
 	float btnHeight;
 	String ddUID;
+	private Menu DDList = null;
 	private int selectedIndex = -1;
 	private Object selectedValue;
 	private String selectedCaption;
-	
 	private int hlIndex;
 	private Object hlValue;
 	private String hlCaption;
-	
 	private int ssIndex;
 	private Object ssValue;
 	private String ssCaption;
-	
 	private boolean DDListIsShowing = false;
-	
-	protected boolean selectEnabled = true;
 	
 	/**
 	 * Creates a new instance of the ComboBox control

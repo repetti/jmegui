@@ -10,6 +10,7 @@ import com.jme3.math.Vector4f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.BufferUtils;
+
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
@@ -18,22 +19,18 @@ import java.nio.ShortBuffer;
  * @author t0neg0d
  */
 public class ElementQuadGrid extends Mesh {
+	boolean updatePosition = true;
 	private FloatBuffer verts = BufferUtils.createFloatBuffer(16*3);
-	private FloatBuffer coords = BufferUtils.createFloatBuffer(16*2);
-	private ShortBuffer indexes = BufferUtils.createShortBuffer(3*3*6);
+	private FloatBuffer coords = BufferUtils.createFloatBuffer(16 * 2);
+	private ShortBuffer indexes = BufferUtils.createShortBuffer(3 * 3 * 6);
 	private FloatBuffer normals = BufferUtils.createFloatBuffer(16*3);
 	private FloatBuffer colors = null;
-	
 	private float[] templateNormals = new float[] { 0f,0f,1f };
 	private Vector2f dimensions;
 	private Vector4f borders;
-	
 	private float[] templateX, templateY, templateCoordX, templateCoordY;
 	private float templateZ = 0;
 	private float imgWidth, imgHeight, pixelWidth, pixelHeight, atlasX, atlasY, atlasW, atlasH;
-	
-	boolean updatePosition = true;
-	
 	private short[] templateIndexes = new short[] {
 		0,1,5,5,4,0
 	};

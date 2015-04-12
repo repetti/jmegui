@@ -16,8 +16,11 @@ public interface Layout {
 	public Layout set(String param);
 	public LayoutParam get(String key);
 	public void resize();
-	public void setHandlesResize(boolean handleResize);
+
 	public boolean getHandlesResize();
+
+	public void setHandlesResize(boolean handleResize);
+
 	public void setOwner(Element el);
 	public ElementManager getScreen();
 	public void layoutChildren();

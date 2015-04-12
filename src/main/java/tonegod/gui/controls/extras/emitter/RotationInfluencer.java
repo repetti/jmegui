@@ -62,13 +62,13 @@ public class RotationInfluencer extends InfluencerBase {
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
+	public boolean getIsEnabled() {
+		return this.isEnabled;
 	}
 
 	@Override
-	public boolean getIsEnabled() {
-		return this.isEnabled;
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	public void setRotateFromEmitterPosition(boolean rotateFromEmitterPosition) {
@@ -80,26 +80,30 @@ public class RotationInfluencer extends InfluencerBase {
 		this.rotateToVelocity = rotateToVelocity;
 		if (this.rotateFromEmitterPosition) this.rotateFromEmitterPosition = false;
 	}
+
+	public boolean getUseFixedRotationSpeed() {
+		return this.useFixedRotationSpeed;
+	}
 	
 	public void setUseFixedRotationSpeed(boolean useFixedRotationSpeed) {
 		this.useFixedRotationSpeed = useFixedRotationSpeed;
 	}
-	
-	public boolean getUseFixedRotationSpeed() {
-		return this.useFixedRotationSpeed;
+
+	public float getMaxRotationSpeed() {
+		return maxRotationSpeed;
 	}
 	
 	public void setMaxRotationSpeed(float maxRotationSpeed) {
 		this.maxRotationSpeed = maxRotationSpeed;
 	}
-	
-	public float getMaxRotationSpeed() { return maxRotationSpeed; }
+
+	public boolean getUseRandomStartAngle() {
+		return useRandomStartAngle;
+	}
 	
 	public void setUseRandomStartAngle(boolean useRandomStartAngle) {
 		this.useRandomStartAngle = useRandomStartAngle;
 	}
-	
-	public boolean getUseRandomStartAngle() { return useRandomStartAngle; }
 	
 	private float getRotationBetween(Vector2f v1, Vector2f v2) {
 		float deltaY = v2.y - v1.y;

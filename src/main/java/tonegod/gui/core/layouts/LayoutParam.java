@@ -13,34 +13,12 @@ import java.util.StringTokenizer;
  * @author t0neg0d
  */
 public class LayoutParam {
-	public static enum ParamType {
-		clip,
-		pad,
-		margin,
-		min,
-		max,
-		pref
-	}
-	public static enum Unit {
-		Boolean,
-		Float,
-		Integer,
-		Align,
-		VAlign
-	}
-	public static enum SizeUnit {
-		absolute,
-		percent,
-		fill
-	}
-	
 	public ParamType type = null;
 	public Map<String,Value> values = new HashMap();
-	
 	public LayoutParam(String param) {
 		StringTokenizer st = new StringTokenizer(param, " ");
 		String name = st.nextToken().toLowerCase();
-		
+
 		getHintType(name);
 		parseHintValues(st);
 	}
@@ -61,7 +39,7 @@ public class LayoutParam {
 		else
 			type = ParamType.valueOf(name);
 	}
-	
+
 	private void parseHintValues(StringTokenizer st) {
 		if (type != null) {
 			switch(type) {
@@ -102,7 +80,31 @@ public class LayoutParam {
 	}
 	
 	public ParamType getType() { return this.type; }
+
 	public Map<String,Value> getValues() { return this.values; }
+
+	public static enum ParamType {
+		clip,
+		pad,
+		margin,
+		min,
+		max,
+		pref
+	}
+
+	public static enum Unit {
+		Boolean,
+		Float,
+		Integer,
+		Align,
+		VAlign
+	}
+
+	public static enum SizeUnit {
+		absolute,
+		percent,
+		fill
+	}
 	
 	public class Value<T> {
 		public Unit unit;

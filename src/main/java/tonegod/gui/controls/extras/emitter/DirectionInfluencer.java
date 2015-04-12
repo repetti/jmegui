@@ -38,17 +38,13 @@ public class DirectionInfluencer extends InfluencerBase {
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
-	}
-
-	@Override
 	public boolean getIsEnabled() {
 		return this.isEnabled;
 	}
-	
-	public void setDirection(Vector2f direction) {
-		this.direction.set(direction);
+
+	@Override
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	public void setDirection(float x, float y) {
@@ -58,13 +54,17 @@ public class DirectionInfluencer extends InfluencerBase {
 	public Vector2f getDirection() {
 		return this.direction;
 	}
-	
-	public void setStrength(float strength) {
-		this.strength = strength;
+
+	public void setDirection(Vector2f direction) {
+		this.direction.set(direction);
 	}
 	
 	public float getStrength() {
 		return this.strength;
+	}
+
+	public void setStrength(float strength) {
+		this.strength = strength;
 	}
 	
 	@Override

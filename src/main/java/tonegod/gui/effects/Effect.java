@@ -17,45 +17,6 @@ import tonegod.gui.framework.animation.Interpolation;
  * @author t0neg0d
  */
 public class Effect implements Cloneable {
-	public static enum EffectType {
-		FadeIn,
-		FadeOut,
-		ZoomIn,
-		ZoomOut,
-		SlideIn,
-		SlideOut,
-		SlideTo,
-		SpinIn,
-		SpinOut,
-		Pulse,
-		ColorSwap,
-		PulseColor,
-		ImageSwap,
-		ImageFadeIn,
-		ImageFadeOut,
-		Desaturate,
-		Saturate
-	}
-	
-	public enum EffectEvent {
-		GetFocus,
-		LoseFocus,
-		Show,
-		Hide,
-		Hover,
-		Press,
-		Release,
-		TabFocus,
-		LoseTabFocus
-	}
-	
-	public enum EffectDirection {
-		Top,
-		Bottom,
-		Left,
-		Right
-	}
-	
 	private Element element;
 	private EffectType type;
 	private EffectEvent event;
@@ -80,14 +41,12 @@ public class Effect implements Cloneable {
 	private float audioVolume = 1;
 	private boolean callHide = true;
 	private Interpolation interpolation;
-	
 	public Effect(EffectType type, EffectEvent event, float duration) {
 		this(type, event, duration, null, 1);
 	//	this.type = type;
 	//	this.event = event;
 	//	this.duration = duration;
 	}
-	
 	public Effect (EffectType type, EffectEvent event, float duration, String audioFile, float audioVolume) {
 		this.type = type;
 		this.event = event;
@@ -96,11 +55,7 @@ public class Effect implements Cloneable {
 		this.audioVolume = audioVolume;
 		this.interpolation = Interpolation.linear;
 	}
-	
-	public void setElement(Element element) {
-		this.element = element;
-	}
-	
+
 	public void setBlendImage(Texture blendImage) {
 		this.blendImage = blendImage;
 	}
@@ -115,6 +70,10 @@ public class Effect implements Cloneable {
 	
 	public Element getElement() {
 		return this.element;
+	}
+
+	public void setElement(Element element) {
+		this.element = element;
 	}
 	
 	public float getDuration() {
@@ -141,49 +100,49 @@ public class Effect implements Cloneable {
 		return this.type;
 	}
 	
-	public void setEffectDirection(EffectDirection effectDir) {
-		this.effectDir = effectDir;
-	}
-	
 	public EffectDirection getEffectDirection() {
 		return this.effectDir;
 	}
-	
-	public void setEffectDestination(Vector2f destination) {
-		this.destination = destination;
+
+	public void setEffectDirection(EffectDirection effectDir) {
+		this.effectDir = effectDir;
 	}
 	
 	public Vector2f getEffectDestination() {
 		return this.destination;
 	}
+
+	public void setEffectDestination(Vector2f destination) {
+		this.destination = destination;
+	}
 	
 	public void setDestroyOnHide(boolean destroyOnHide) {
 		this.destroyOnHide = destroyOnHide;
+	}
+
+	public String getAudioFile() {
+		return this.audioFile;
 	}
 	
 	public void setAudioFile(String audioFile) {
 		this.audioFile = audioFile;
 	}
-	
-	public String getAudioFile() {
-		return this.audioFile;
+
+	public float getAudioVolume() {
+		return this.audioVolume;
 	}
 	
 	public void setAudioVolume(float audioVolume) {
 		this.audioVolume = audioVolume;
 	}
-	
-	public float getAudioVolume() {
-		return this.audioVolume;
+
+	public Interpolation getInterpolation() {
+		return this.interpolation;
 	}
 	
 	public void setInterpolation(Interpolation interpolation) {
 		this.interpolation = null;
 		this.interpolation = interpolation;
-	}
-	
-	public Interpolation getInterpolation() {
-		return this.interpolation;
 	}
 	
 	public void update(float tpf) {
@@ -382,10 +341,10 @@ public class Effect implements Cloneable {
 	private void updateSlideTo() {
 		if (!init) {
 			def.set(element.getPosition().clone());
-			diff.set(element.getX()-destination.getX(),element.getY()-destination.getY());
+			diff.set(element.getX() - destination.getX(), element.getY() - destination.getY());
 			init = true;
 		}
-		
+
 		Vector2f inc = new Vector2f(diff.x*pass,diff.y*pass);
 		float nextX = def.x, nextY = def.y;
 		if (diff.x < 0)			nextX = def.x-inc.x;
@@ -393,7 +352,7 @@ public class Effect implements Cloneable {
 		if (diff.y < 0)			nextY = def.y-inc.y;
 		else if (diff.y > 0)	nextY = def.y-inc.y;
 		element.setPosition(nextX,nextY);
-		
+
 		if (pass >= 1.0) {
 			element.setPosition(destination);
 			isActive = false;
@@ -550,7 +509,7 @@ public class Effect implements Cloneable {
 			initPositions();
 			Vector2f inc = new Vector2f(diff.x*pass,diff.y*pass);
 			element.setPosition(def.subtract(inc));
-			element.setLocalScale(1-pass);
+			element.setLocalScale(1 - pass);
 			init = true;
 		} else if (localActive) {
 			Vector2f inc = new Vector2f(diff.x*pass,diff.y*pass);
@@ -636,10 +595,10 @@ public class Effect implements Cloneable {
         element.getElementMaterial().setFloat("EffectStep", pass);
         if (pass >= 1.0) {
             isActive = false;
-        }
-        
-    }
+		}
 
+	}
+	
     private void updateSaturate() {
         if (!init) {
             element.getElementMaterial().setBoolean("UseEffect", true);
@@ -658,6 +617,45 @@ public class Effect implements Cloneable {
 	
 	@Override
 	public String toString() {
-	    return "Event @"+element.getName() + " " + event + " " + type; 
+		return "Event @" + element.getName() + " " + event + " " + type;
+	}
+
+	public static enum EffectType {
+		FadeIn,
+		FadeOut,
+		ZoomIn,
+		ZoomOut,
+		SlideIn,
+		SlideOut,
+		SlideTo,
+		SpinIn,
+		SpinOut,
+		Pulse,
+		ColorSwap,
+		PulseColor,
+		ImageSwap,
+		ImageFadeIn,
+		ImageFadeOut,
+		Desaturate,
+		Saturate
+	}
+
+	public enum EffectEvent {
+		GetFocus,
+		LoseFocus,
+		Show,
+		Hide,
+		Hover,
+		Press,
+		Release,
+		TabFocus,
+		LoseTabFocus
+	}
+
+	public enum EffectDirection {
+		Top,
+		Bottom,
+		Left,
+		Right
 	}
 }

@@ -10,23 +10,21 @@ repositories {
     }
 }
 
-def jmonkeyengine_version = '3.0.+'
-//def version_slf4j = '1.7.12'
-
 dependencies {
+    apply from: 'versions.gradle'
 //    compile fileTree(dir: 'libs', include: '*.jar')
 
-    compile "com.jme3:jme3-core:$jmonkeyengine_version"
-    compile "com.jme3:jme3-effects:$jmonkeyengine_version"
-    compile "com.jme3:jme3-networking:$jmonkeyengine_version"
-    compile "com.jme3:jme3-plugins:$jmonkeyengine_version"
-    compile "com.jme3:jme3-jogg:$jmonkeyengine_version"
-    compile "com.jme3:jme3-terrain:$jmonkeyengine_version"
-    compile "com.jme3:jme3-blender:$jmonkeyengine_version"
-    compile "com.jme3:jme3-jbullet:$jmonkeyengine_version"
-    compile "com.jme3:jme3-niftygui:$jmonkeyengine_version"
-    compile "com.jme3:jme3-desktop:$jmonkeyengine_version"
-    compile "com.jme3:jme3-lwjgl:$jmonkeyengine_version"
+    compile "com.jme3:jme3-core:$version_jme"
+    compile "com.jme3:jme3-effects:$version_jme"
+    compile "com.jme3:jme3-networking:$version_jme"
+    compile "com.jme3:jme3-plugins:$version_jme"
+    compile "com.jme3:jme3-jogg:$version_jme"
+    compile "com.jme3:jme3-terrain:$version_jme"
+    compile "com.jme3:jme3-blender:$version_jme"
+    compile "com.jme3:jme3-jbullet:$version_jme"
+    compile "com.jme3:jme3-niftygui:$version_jme"
+    compile "com.jme3:jme3-desktop:$version_jme"
+    compile "com.jme3:jme3-lwjgl:$version_jme"
 
 //    compile group: 'org.slf4j', name: 'slf4j-api', version: version_slf4j
 //    runtime group: 'org.slf4j', name: 'slf4j-simple', version: version_slf4j

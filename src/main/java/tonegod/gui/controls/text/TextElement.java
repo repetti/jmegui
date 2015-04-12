@@ -34,10 +34,11 @@ public abstract class TextElement extends Element implements Control {
 	
 	
 	int qdIndex = 0;
+	float size;
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 */
 	public TextElement(ElementManager screen) {
@@ -51,7 +52,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 */
 	public TextElement(ElementManager screen, BitmapFont font) {
@@ -65,7 +66,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 */
@@ -80,7 +81,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -95,7 +96,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -108,7 +109,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -124,7 +125,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -140,7 +141,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	/**
 	 * Creates a new instance of the TextElement control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -155,11 +156,11 @@ public abstract class TextElement extends Element implements Control {
 		this.setIgnoreMouse(true);
 		this.setDocking(Docking.NW);
 		this.setClippingLayer(this);
-		
+
 		textWrap = LineWrapMode.NoWrap;
-		
+
 		BitmapFont teFont = (font == null) ? getFont() : font;
-		
+
 		animText = new AnimText(
 			screen.getApplication().getAssetManager(),
 			teFont
@@ -247,8 +248,7 @@ public abstract class TextElement extends Element implements Control {
 	
 	@Override
 	public float getFontSize() { return size; }
-	
-	float size;
+
 	@Override
 	public void setFontSize(float fontSize) {
 		this.size = fontSize;

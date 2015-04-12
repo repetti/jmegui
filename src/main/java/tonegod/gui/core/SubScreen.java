@@ -1,6 +1,5 @@
 package tonegod.gui.core;
 
-import tonegod.gui.style.Style;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -24,14 +23,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.jme3.texture.Texture;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import tonegod.gui.controls.form.Form;
 import tonegod.gui.controls.lists.ComboBox;
 import tonegod.gui.controls.menuing.AutoHide;
@@ -41,7 +32,6 @@ import tonegod.gui.controls.util.ModalBackground;
 import tonegod.gui.controls.util.ToolTip;
 import tonegod.gui.core.Element.Borders;
 import tonegod.gui.core.utils.ScaleUtil;
-import tonegod.gui.style.StyleManager.CursorType;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.EffectManager;
 import tonegod.gui.effects.cursor.CursorEffects;
@@ -50,29 +40,38 @@ import tonegod.gui.framework.core.AnimLayer;
 import tonegod.gui.framework.core.AnimManager;
 import tonegod.gui.framework.core.QuadData;
 import tonegod.gui.listeners.*;
+import tonegod.gui.style.Style;
+import tonegod.gui.style.StyleManager.CursorType;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author t0neg0d
  */
 public class SubScreen implements ElementManager, Control {
+	protected Spatial spatial;
+	protected Node subScreenNode = new Node("t0neg0dGUI");
 	private String UID;
 	private Screen screen;
 	private Application app;
 	private SubScreenBridge bridge;
 	private Geometry geom;
-	
-	protected Spatial spatial;
 	private Map<String, Element> elements = new HashMap();
 	private Ray elementZOrderRay = new Ray();
 	private Vector3f guiRayOrigin = new Vector3f();
-	
 	private Vector2f tempElementOffset = new Vector2f();
 	private Map<Integer,Vector2f> elementOffsets = new HashMap();
 	private Map<Integer,Element> contactElements = new HashMap();
 	private Map<Integer,Element> eventElements = new HashMap();
 	private Map<Integer,Borders> eventElementResizeDirections = new HashMap();
-	
 	private Element eventElement = null;
 	private Element targetElement = null;
 	private Element keyboardElement = null;
@@ -92,14 +91,10 @@ public class SubScreen implements ElementManager, Control {
 	private boolean mouseLeftPressed = false;
 	private boolean mouseRightPressed = false;
 	private boolean mouseWheelPressed = false;
-	
 	private float zOrderCurrent = .5f;
 	private float zOrderStepMajor = .01f;
 	private float zOrderStepMinor = 0.0001f;
-	
 	private String clipboardText = "";
-	
-	protected Node subScreenNode = new Node("t0neg0dGUI");
 	private Material mat;
 	
 	private Vector2f mouseXY = new Vector2f(0,0);
@@ -1247,13 +1242,13 @@ public class SubScreen implements ElementManager, Control {
 	}
 
 	@Override
-	public void setClipboardText(String text) {
-		screen.setClipboardText(text);
+	public String getClipboardText() {
+		return screen.getClipboardText();
 	}
 
 	@Override
-	public String getClipboardText() {
-		return screen.getClipboardText();
+	public void setClipboardText(String text) {
+		screen.setClipboardText(text);
 	}
 
 	@Override
@@ -1264,6 +1259,11 @@ public class SubScreen implements ElementManager, Control {
 	@Override
 	public float getGlobalAlpha() {
 		return screen.getGlobalAlpha();
+	}
+
+	@Override
+	public void setGlobalAlpha(float alpha) {
+		screen.setGlobalAlpha(alpha);
 	}
 
 	@Override
@@ -1282,20 +1282,30 @@ public class SubScreen implements ElementManager, Control {
 	}
 
 	@Override
+	public void setUseUIAudio(boolean use) {
+		screen.setUseUIAudio(use);
+	}
+
+	@Override
 	public boolean getUseToolTips() {
 		return screen.getUseToolTips();
+	}
+
+	@Override
+	public void setUseToolTips(boolean use) {
+		screen.setUseToolTips(use);
 	}
 
 	@Override
 	public void updateToolTipLocation() {
 		screen.updateToolTipLocation();
 	}
-	
+
 	@Override
 	public Element getToolTipFocus() {
 		return screen.getToolTipFocus();
 	}
-	
+
 	@Override
 	public void hideToolTip() {
 		screen.hideToolTip();
@@ -1317,19 +1327,18 @@ public class SubScreen implements ElementManager, Control {
 	}
 
 	@Override
-	public void setGlobalAlpha(float alpha) {
-		screen.setGlobalAlpha(alpha);
-	}
-	
-	@Override
 	public BitmapFont getDefaultGUIFont() {
 		return screen.getDefaultGUIFont();
 	}
-	
+
+	;
+
 	@Override
 	public ScaleUtil getScaleManager() {
 		return screen.getScaleManager();
 	}
+
+	;
 	
 	@Override
 	public float scaleFloat(float in) {
@@ -1345,20 +1354,15 @@ public class SubScreen implements ElementManager, Control {
 	public Vector3f scaleVector3f(Vector3f in) {
 		return screen.scaleVector3f(in);
 	};
-	
+
 	@Override
 	public Vector4f scaleVector4f(Vector4f in) {
 		return screen.scaleVector4f(in);
-	};
-	
+	}
+
 	@Override
 	public float scaleFontSize(float in) {
 		return screen.scaleFontSize(in);
-	};
-
-	@Override
-	public void setUseUIAudio(boolean use) {
-		screen.setUseUIAudio(use);
 	}
 
 	@Override
@@ -1367,18 +1371,13 @@ public class SubScreen implements ElementManager, Control {
 	}
 
 	@Override
-	public void setUseToolTips(boolean use) {
-		screen.setUseToolTips(use);
+	public boolean getUseCustomCursors() {
+		return screen.getUseCustomCursors();
 	}
 
 	@Override
 	public void setUseCustomCursors(boolean use) {
 		screen.setUseCustomCursors(use);
-	}
-
-	@Override
-	public boolean getUseCustomCursors() {
-		return screen.getUseCustomCursors();
 	}
 
 	@Override

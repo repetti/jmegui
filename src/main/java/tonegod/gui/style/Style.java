@@ -8,9 +8,10 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
+import tonegod.gui.effects.Effect;
+
 import java.util.HashMap;
 import java.util.Map;
-import tonegod.gui.effects.Effect;
 
 /**
  *

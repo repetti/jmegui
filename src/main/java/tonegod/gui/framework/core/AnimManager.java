@@ -7,26 +7,25 @@ package tonegod.gui.framework.core;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.control.AbstractControl;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.core.Screen;
 import tonegod.gui.framework.animation.TemporalAction;
 import tonegod.gui.framework.core.util.GameTimer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author t0neg0d
  */
 public class AnimManager extends AbstractControl {
+	float time;
 	private Screen screen;
 	private List<ActionItem> queue = new ArrayList();
 	private List<ActionItem> remove = new ArrayList();
 	private List<ActionItem> active = new ArrayList();
-	
 	private List<GameTimer> timers = new ArrayList();
 	private List<GameTimer> removeTimers = new ArrayList();
-	
-	float time;
 	
 	public AnimManager(Screen screen) {
 		this.screen = screen;

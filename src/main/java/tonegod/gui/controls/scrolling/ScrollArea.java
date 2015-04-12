@@ -28,19 +28,19 @@ import tonegod.gui.listeners.TouchListener;
  */
 public class ScrollArea extends Element implements MouseWheelListener, TouchListener, FlingListener {
 	protected Element scrollableArea;
-	private boolean isTextOnly = true;
-	private boolean isScrollable = true;
-	private VScrollBar vScrollBar;
 	protected float scrollSize;
-	private boolean scrollHidden = false;
     protected float scrollBarGap = 0;
 	protected GameTimer flingTimer;
-	private boolean flingEnabled = true;
 	float flingSpeed = 0;
 	boolean flingDir = true;
 	float touchOffsetY = 0;
 	float touchStartY = 0;
 	float touchEndY = 0;
+	private boolean isTextOnly = true;
+	private boolean isScrollable = true;
+	private VScrollBar vScrollBar;
+	private boolean scrollHidden = false;
+	private boolean flingEnabled = true;
 	
 	/**
 	 * Creates a new instance of the ScrollArea control
@@ -273,16 +273,13 @@ public class ScrollArea extends Element implements MouseWheelListener, TouchList
 	public boolean getIsTextOnly() {
 		return isTextOnly;
 	}
+
+	public boolean getFlingEnabled() {
+		return this.flingEnabled;
+	}
 	
 	public void setFlingEnabled(boolean enabled) {
 		this.flingEnabled = enabled;
-	}
-	
-	public boolean getFlingEnabled() { return this.flingEnabled; }
-	
-	private void setVScrollBar(VScrollBar vScrollBar) {
-		this.vScrollBar = vScrollBar;
-		vScrollBar.setScrollableArea(this);
 	}
 	
 	/**
@@ -291,6 +288,11 @@ public class ScrollArea extends Element implements MouseWheelListener, TouchList
 	 */
 	public VScrollBar getVScrollBar() {
 		return this.vScrollBar;
+	}
+
+	private void setVScrollBar(VScrollBar vScrollBar) {
+		this.vScrollBar = vScrollBar;
+		vScrollBar.setScrollableArea(this);
 	}
 	
 	/**
@@ -303,20 +305,6 @@ public class ScrollArea extends Element implements MouseWheelListener, TouchList
 	}
 	
 	/**
-	 * Sets the padding for the ScrollArea
-	 * @param padding float 
-	 */
-	public void setPadding(float padding) {
-		if (isTextOnly) {
-			setTextPadding(padding);
-			setTextClipPadding(padding);
-		} else {
-			scrollableArea.setTextPadding(padding);
-			scrollableArea.setTextClipPadding(padding);
-		}
-	}
-	
-	/**
 	 * Returns the padding used for the ScollArea
 	 * @return float
 	 */
@@ -325,6 +313,20 @@ public class ScrollArea extends Element implements MouseWheelListener, TouchList
 			return getTextPadding();
 		} else {
 			return scrollableArea.getTextPadding();
+		}
+	}
+	
+	/**
+	 * Sets the padding for the ScrollArea
+	 * @param padding float
+	 */
+	public void setPadding(float padding) {
+		if (isTextOnly) {
+			setTextPadding(padding);
+			setTextClipPadding(padding);
+		} else {
+			scrollableArea.setTextPadding(padding);
+			scrollableArea.setTextClipPadding(padding);
 		}
 	}
 	

@@ -60,6 +60,14 @@ public class MenuItem {
 	}
 	
 	/**
+	 * Returns true if the MenuItem is set to toggleable
+	 * @return boolean
+	 */
+	public boolean getIsToggleItem() {
+		return this.isToggleItem;
+	}
+
+	/**
 	 * Sets if the MenuItem should be toggleable
 	 * @param isToggleItem boolean
 	 */
@@ -68,11 +76,11 @@ public class MenuItem {
 	}
 	
 	/**
-	 * Returns true if the MenuItem is set to toggleable
-	 * @return boolean
+	 * Returns if the MenuItem is currently toggled
+	 * @return
 	 */
-	public boolean getIsToggleItem() {
-		return this.isToggleItem;
+	public boolean getIsToggled() {
+		return this.isToggled;
 	}
 	
 	/**
@@ -84,14 +92,6 @@ public class MenuItem {
 		if (toggle != null) {
 			toggle.setIsChecked(isToggled);
 		}
-	}
-	
-	/**
-	 * Returns if the MenuItem is currently toggled
-	 * @return 
-	 */
-	public boolean getIsToggled() {
-		return this.isToggled;
 	}
 	
 	/**

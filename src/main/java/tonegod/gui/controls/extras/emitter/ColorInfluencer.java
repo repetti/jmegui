@@ -35,13 +35,13 @@ public class ColorInfluencer extends InfluencerBase {
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
+	public boolean getIsEnabled() {
+		return this.isEnabled;
 	}
 
 	@Override
-	public boolean getIsEnabled() {
-		return this.isEnabled;
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	public void setStartColor(ColorRGBA startColor) {

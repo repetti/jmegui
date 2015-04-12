@@ -39,29 +39,29 @@ public class DestinationInfluencer extends InfluencerBase {
 	public void initialize(ElementParticle particle) {  }
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
-	}
-
-	@Override
 	public boolean getIsEnabled() {
 		return this.isEnabled;
 	}
-	
-	public void setDestination(Vector2f direction) {
-		this.destination.set(direction);
+
+	@Override
+	public void setIsEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
 	}
 	
 	public Vector2f getDestination() {
 		return this.destination;
 	}
-	
-	public void setStrength(float strength) {
-		this.strength = strength;
+
+	public void setDestination(Vector2f direction) {
+		this.destination.set(direction);
 	}
 	
 	public float getStrength() {
 		return this.strength;
+	}
+
+	public void setStrength(float strength) {
+		this.strength = strength;
 	}
 	
 	@Override

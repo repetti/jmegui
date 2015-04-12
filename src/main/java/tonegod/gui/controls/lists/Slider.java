@@ -10,13 +10,14 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -24,10 +25,9 @@ import tonegod.gui.effects.Effect;
  */
 public abstract class Slider extends ButtonAdapter {
 	protected List<Object> stepValues = new ArrayList();
+	protected Orientation orientation;
 	private Element elThumbLock;
 	private ButtonAdapter elThumb;
-	
-	protected Orientation orientation;
 	private int selectedIndex = 0;
 	private boolean isStepped = false;
 	private float stepSize = 1;
@@ -458,49 +458,8 @@ public abstract class Slider extends ButtonAdapter {
 	}
 	
 	/**
-	 * Sets the Slider's selected index to the selected step index specified and
-	 * moves the Slider's thumb to appropriate x/y coordinates to reflect this change.
-	 * 
-	 * @param selectedIndex The index to set the Slider's selectedIndex to.
-	 */
-	private void setInternalSelectedIndex(int selectedIndex) {
-		this.selectedIndex = selectedIndex;
-		if( isStepped)	onChange(selectedIndex, stepValues.get(selectedIndex));
-		else			onChange(selectedIndex, selectedIndex);
-	}
-	
-	/**
-	 * Sets the selectedIndex to the provided index and updates appropriately then calling the onChange event
-	 * @param selectedIndex 
-	 */
-	public void setSelectedIndexWithCallback(int selectedIndex) {
-		if (isStepped) {
-			if (selectedIndex < 0)							selectedIndex = 0;
-			else if (selectedIndex > stepValues.size()-1)	selectedIndex = stepValues.size()-1;
-		} else {
-			if (selectedIndex < 0)							selectedIndex = 0;
-			else if (selectedIndex > 100)					selectedIndex = 100;
-		}
-		
-		this.selectedIndex = selectedIndex;
-		
-		float step = (isStepped) ? stepSize : ((trackSurroundsThumb) ? (getWidth()-controlSize)/100 : getWidth()/100);
-		step *= selectedIndex;
-		if (orientation == Orientation.HORIZONTAL) {
-			if (trackSurroundsThumb)elThumbLock.setX(step+(controlSize/2));
-			else					elThumbLock.setX(step);
-		} else {
-			if (trackSurroundsThumb)elThumbLock.setY(step+(controlSize/2));
-			else					elThumbLock.setY(step);
-		}
-		
-		if( isStepped)	onChange(selectedIndex, stepValues.get(selectedIndex));
-		else			onChange(selectedIndex, selectedIndex);
-	}
-	
-	/**
 	 * Sets the selectedIndex to the provided index and updates appropriately
-	 * @param selectedIndex 
+	 * @param selectedIndex
 	 */
 	public void setSelectedIndex(int selectedIndex) {
 		if (isStepped) {
@@ -510,9 +469,9 @@ public abstract class Slider extends ButtonAdapter {
 			if (selectedIndex < 0)							selectedIndex = 0;
 			else if (selectedIndex > 100)					selectedIndex = 100;
 		}
-		
+
 		this.selectedIndex = selectedIndex;
-		
+
 		float step = (isStepped) ? stepSize : ((trackSurroundsThumb) ? (getWidth()-controlSize)/100 : getWidth()/100);
 		step *= selectedIndex;
 		if (orientation == Orientation.HORIZONTAL) {
@@ -522,6 +481,47 @@ public abstract class Slider extends ButtonAdapter {
 			if (trackSurroundsThumb)elThumbLock.setY(step+(controlSize/2));
 			else					elThumbLock.setY(step);
 		}
+	}
+
+	/**
+	 * Sets the Slider's selected index to the selected step index specified and
+	 * moves the Slider's thumb to appropriate x/y coordinates to reflect this change.
+	 *
+	 * @param selectedIndex The index to set the Slider's selectedIndex to.
+	 */
+	private void setInternalSelectedIndex(int selectedIndex) {
+		this.selectedIndex = selectedIndex;
+		if( isStepped)	onChange(selectedIndex, stepValues.get(selectedIndex));
+		else			onChange(selectedIndex, selectedIndex);
+	}
+
+	/**
+	 * Sets the selectedIndex to the provided index and updates appropriately then calling the onChange event
+	 * @param selectedIndex
+	 */
+	public void setSelectedIndexWithCallback(int selectedIndex) {
+		if (isStepped) {
+			if (selectedIndex < 0)							selectedIndex = 0;
+			else if (selectedIndex > stepValues.size()-1)	selectedIndex = stepValues.size()-1;
+		} else {
+			if (selectedIndex < 0)							selectedIndex = 0;
+			else if (selectedIndex > 100)					selectedIndex = 100;
+		}
+
+		this.selectedIndex = selectedIndex;
+
+		float step = (isStepped) ? stepSize : ((trackSurroundsThumb) ? (getWidth()-controlSize)/100 : getWidth()/100);
+		step *= selectedIndex;
+		if (orientation == Orientation.HORIZONTAL) {
+			if (trackSurroundsThumb)elThumbLock.setX(step+(controlSize/2));
+			else					elThumbLock.setX(step);
+		} else {
+			if (trackSurroundsThumb)elThumbLock.setY(step+(controlSize/2));
+			else					elThumbLock.setY(step);
+		}
+
+		if (isStepped) onChange(selectedIndex, stepValues.get(selectedIndex));
+		else onChange(selectedIndex, selectedIndex);
 	}
 	
 	/**
@@ -641,17 +641,17 @@ public abstract class Slider extends ButtonAdapter {
 	
 	@Override
 	public void onKeyRelease(KeyInputEvent evt) {
-		
+
 	}
-	
-	@Override
-	public void setToolTipText(String tip) {
-		this.elThumb.setToolTipText(tip);
-	}
-	
+
 	@Override
 	public String getToolTipText() {
 		return this.elThumb.getToolTipText();
+	}
+
+	@Override
+	public void setToolTipText(String tip) {
+		this.elThumb.setToolTipText(tip);
 	}
 	
 	public ButtonAdapter getThumb() { return elThumb; }

@@ -25,10 +25,10 @@ public class Window extends Element {
 	protected Element dragBar;
 	protected Element contentArea;
 	protected ButtonAdapter close, collapse;
+	protected Vector4f dbIndents = new Vector4f();
 	private boolean useShowSound, useHideSound;
 	private String showSound, hideSound;
 	private float showSoundVolume, hideSoundVolume;
-	protected Vector4f dbIndents = new Vector4f();
 	private Window self;
 	private boolean useClose = false, useCollapse = false, isCollapsed = false;
 	private float winDif = 0;
@@ -285,19 +285,20 @@ public class Window extends Element {
 	}
 	
 	/**
-	 * Enables/disables the Window dragbar
-	 * @param isMovable boolean
-	 */
-	public void setWindowIsMovable(boolean isMovable) {
-		this.dragBar.setIsMovable(isMovable);
-	}
-	
-	/**
 	 * Returns if the Window dragbar is currently enabled/disabled
 	 * @return boolean
 	 */
 	public boolean getWindowIsMovable() {
 		return this.dragBar.getIsMovable();
+	}
+
+	/**
+	 * Enables/disables the Window dragbar
+	 *
+	 * @param isMovable boolean
+	 */
+	public void setWindowIsMovable(boolean isMovable) {
+		this.dragBar.setIsMovable(isMovable);
 	}
 	
 	public void addWindowContent(Element el) {

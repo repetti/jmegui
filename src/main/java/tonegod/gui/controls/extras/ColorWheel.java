@@ -9,7 +9,6 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.awt.Color;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.lists.Dial;
 import tonegod.gui.controls.lists.Slider;
@@ -19,6 +18,8 @@ import tonegod.gui.controls.windows.Window;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
+
+import java.awt.*;
 
 /**
  *
@@ -596,27 +597,6 @@ public abstract class ColorWheel extends Window {
 		onChange(finalColor);
 	}
 	
-	public void setColor(ColorRGBA color) {
-		R = (int)(color.r*255);
-		if (R < 0) R = 0;
-		else if (R > 255) R = 255;
-		sR.setSelectedIndex((int)(color.r*100));
-		G = (int)(color.g*255);
-		if (G < 0) G = 0;
-		else if (G > 255) G = 255;
-		sG.setSelectedIndex((int)(color.g*100));
-		B = (int)(color.b*255);
-		if (B < 0) B = 0;
-		else if (B > 255) B = 255;
-		sB.setSelectedIndex((int)(color.b*100));
-		A = (int)(color.a*100);
-		if (A < 0) A = 0;
-		else if (A > 100) A = 100;
-		sA.setSelectedIndex(A);
-		
-		setDisplay();
-	}
-	
 	public void setColor(float red, float green, float blue) {
 		if (red < 0) red = 0;
 		else if (red > 1) red = 1;
@@ -630,7 +610,7 @@ public abstract class ColorWheel extends Window {
 		else if (blue > 1) blue = 1;
 		B = (int)(blue*255);
 		sB.setSelectedIndex((int)(blue*100));
-		
+
 		setDisplay();
 	}
 	
@@ -651,7 +631,7 @@ public abstract class ColorWheel extends Window {
 		else if (alpha > 1) alpha = 1;
 		A = (int)(alpha*100);
 		sA.setSelectedIndex(A);
-		
+
 		setDisplay();
 	}
 	
@@ -665,7 +645,7 @@ public abstract class ColorWheel extends Window {
 		if (blue < 0) blue = 0;
 		else if (blue > 255) blue = 255;
 		B = blue;
-		
+
 		setDisplay();
 	}
 	
@@ -674,20 +654,59 @@ public abstract class ColorWheel extends Window {
 		else if (red > 255) red = 255;
 		R = red;
 	}
+
+	public void setGreen(int green) {
+		if (green < 0) green = 0;
+		else if (green > 255) green = 255;
+		G = green;
+	}
+
+	public void setBlue(int blue) {
+		if (blue < 0) blue = 0;
+		else if (blue > 255) blue = 255;
+		B = blue;
+	}
+
+	public ColorRGBA getColor() {
+		return new ColorRGBA(finalRed, finalGreen, finalBlue, finalAlpha);
+	}
+
+	public void setColor(ColorRGBA color) {
+		R = (int) (color.r * 255);
+		if (R < 0) R = 0;
+		else if (R > 255) R = 255;
+		sR.setSelectedIndex((int) (color.r * 100));
+		G = (int) (color.g * 255);
+		if (G < 0) G = 0;
+		else if (G > 255) G = 255;
+		sG.setSelectedIndex((int) (color.g * 100));
+		B = (int) (color.b * 255);
+		if (B < 0) B = 0;
+		else if (B > 255) B = 255;
+		sB.setSelectedIndex((int) (color.b * 100));
+		A = (int) (color.a * 100);
+		if (A < 0) A = 0;
+		else if (A > 100) A = 100;
+		sA.setSelectedIndex(A);
+
+		setDisplay();
+	}
+
+	public float getRed() {
+		return finalRed;
+	}
 	
 	public void setRed(float red) {
 		if (red < 0) red = 0;
 		else if (red > 1) red = 1;
 		R = (int)(red*255);
 		sR.setSelectedIndex((int)(red*100));
-		
+
 		setDisplay();
 	}
-	
-	public void setGreen(int green) {
-		if (green < 0) green = 0;
-		else if (green > 255) green = 255;
-		G = green;
+
+	public float getGreen() {
+		return finalGreen;
 	}
 	
 	public void setGreen(float green) {
@@ -695,14 +714,12 @@ public abstract class ColorWheel extends Window {
 		else if (green > 1) green = 1;
 		G = (int)(green*255);
 		sG.setSelectedIndex((int)(green*100));
-		
+
 		setDisplay();
 	}
-	
-	public void setBlue(int blue) {
-		if (blue < 0) blue = 0;
-		else if (blue > 255) blue = 255;
-		B = blue;
+
+	public float getBlue() {
+		return finalGreen;
 	}
 	
 	public void setBlue(float blue) {
@@ -710,8 +727,12 @@ public abstract class ColorWheel extends Window {
 		else if (blue > 1) blue = 1;
 		B = (int)(blue*255);
 		sB.setSelectedIndex((int)(blue*100));
-		
+
 		setDisplay();
+	}
+
+	public float getAlpha() {
+		return finalAlpha;
 	}
 	
 	public void setAlpha(float alpha) {
@@ -719,8 +740,12 @@ public abstract class ColorWheel extends Window {
 		else if (alpha > 1) alpha = 1;
 		A = (int)(alpha*100);
 		sA.setSelectedIndex(A);
-		
+
 		setDisplay();
+	}
+
+	public float getHue() {
+		return finalHue;
 	}
 	
 	public void setHue(float hue) {
@@ -729,6 +754,10 @@ public abstract class ColorWheel extends Window {
 		H = (int)(hue*100);
 		sH.setSelectedIndex(H);
 	}
+
+	public float getSaturation() {
+		return finalSaturation;
+	}
 	
 	public void setSaturation(float saturation) {
 		if (saturation < 0) saturation = 0;
@@ -736,44 +765,16 @@ public abstract class ColorWheel extends Window {
 		S = (int)(saturation*100);
 		sS.setSelectedIndex(S);
 	}
+
+	public float getLight() {
+		return finalLight;
+	}
 	
 	public void setLight(float light) {
 		if (light < 0) light = 0;
 		else if (light > 1) light = 1;
 		L = (int)(light*100);
 		sL.setSelectedIndex(L);
-	}
-	
-	public ColorRGBA getColor() {
-		return new ColorRGBA(finalRed, finalGreen, finalBlue, finalAlpha);
-	}
-	
-	public float getRed() {
-		return finalRed;
-	}
-	
-	public float getGreen() {
-		return finalGreen;
-	}
-	
-	public float getBlue() {
-		return finalGreen;
-	}
-	
-	public float getAlpha() {
-		return finalAlpha;
-	}
-	
-	public float getHue() {
-		return finalHue;
-	}
-	
-	public float getSaturation() {
-		return finalSaturation;
-	}
-	
-	public float getLight() {
-		return finalLight;
 	}
 	
 	private void setDisplay() {

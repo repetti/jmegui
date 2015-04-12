@@ -48,15 +48,6 @@ public abstract class GameTimer {
 	}
 	
 	/**
-	 * Sets the amount of time in seconds that should elapse before the
-	 * GameTimer is complete.
-	 * @param targetTime The duration of the timer
-	 */
-	public void setDuration(float duration) {
-		this.duration = duration;
-	}
-	
-	/**
 	 * Sets the duration to a new value on the next call to reset.
 	 * Allows for updating the duration properly from onComplete method
 	 * @param duration The duration to use on the next timer run
@@ -75,6 +66,15 @@ public abstract class GameTimer {
 		return this.duration;
 	}
 	
+	/**
+	 * Sets the amount of time in seconds that should elapse before the
+	 * GameTimer is complete.
+	 * @param targetTime The duration of the timer
+	 */
+	public void setDuration(float duration) {
+		this.duration = duration;
+	}
+
 	/**
 	 * Resets the timer for another use.
 	 * @param resetFromLastEndTime GameTimer should subtract the targetTime from the
@@ -126,19 +126,19 @@ public abstract class GameTimer {
 	}
 	
 	/**
-	 * Sets the interpolation to apply to the percent complete returned by getPercentComplete()
-	 * @param interpolation 
-	 */
-	public void setInterpolation(Interpolation interpolation) {
-		this.interpolation = interpolation;
-	}
-	
-	/**
 	 * Returns the interpolation set to be used by getPercentComplete()
-	 * @return 
+	 * @return
 	 */
 	public Interpolation getInterpolation() {
 		return this.interpolation;
+	}
+	
+	/**
+	 * Sets the interpolation to apply to the percent complete returned by getPercentComplete()
+	 * @param interpolation
+	 */
+	public void setInterpolation(Interpolation interpolation) {
+		this.interpolation = interpolation;
 	}
 	
 	/**
@@ -166,20 +166,24 @@ public abstract class GameTimer {
 	}
 	
 	/**
+	 * Returns if the GameTimer will automatically reset and restart after calling onComplete.
+	 * @return
+	 */
+	public boolean getAutoRestart() {
+		return this.autoRestart;
+	}
+
+	/**
 	 * For use with or without managed GameTimers.
 	 * Enables auto restart of the timer after calling onComplete.
-	 * @param autoRestart 
+	 * @param autoRestart
 	 */
 	public void setAutoRestart(boolean autoRestart) {
 		this.autoRestart = autoRestart;
 	}
-	
-	/**
-	 * Returns if the GameTimer will automatically reset and restart after calling onComplete.
-	 * @return 
-	 */
-	public boolean getAutoRestart() {
-		return this.autoRestart;
+
+	public boolean getIsManaged() {
+		return this.isManaged;
 	}
 	
 	/**
@@ -188,8 +192,6 @@ public abstract class GameTimer {
 	public void setIsManaged(boolean isManaged) {
 		this.isManaged = isManaged;
 	}
-	
-	public boolean getIsManaged() { return this.isManaged; }
 	
 	/**
 	 * Should be called each game loop

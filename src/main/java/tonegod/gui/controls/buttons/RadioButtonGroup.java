@@ -4,21 +4,22 @@
  */
 package tonegod.gui.controls.buttons;
 
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author t0neg0d
  */
 public abstract class RadioButtonGroup {
-	private ElementManager screen;
-	private String UID;
 	protected List<Button> radioButtons = new ArrayList();
 	protected int selectedIndex = -1;
+	private ElementManager screen;
+	private String UID;
 	private Button selected = null;
 	
 	public RadioButtonGroup(ElementManager screen) {
@@ -71,10 +72,14 @@ public abstract class RadioButtonGroup {
 			}
 		}
 	}
+
+	public Button getSelected() {
+		return this.selected;
+	}
 	
 	/**
 	 * Sets the current selected Radio Button to the Button instance provided
-	 * @param button 
+	 * @param button
 	 */
 	public void setSelected(Button button) {
 		if (this.selected != button) {
@@ -90,8 +95,6 @@ public abstract class RadioButtonGroup {
 			onSelect(selectedIndex, button);
 		}
 	}
-	
-	public Button getSelected() { return this.selected; }
 	
 	/**
 	 * Abstract event method for change in selected Radio Button

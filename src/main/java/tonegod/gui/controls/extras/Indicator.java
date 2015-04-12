@@ -250,15 +250,6 @@ public abstract class Indicator extends Element {
 	}
 	
 	/**
-	 * Set the maximum value (e.g. float  = 100%)
-	 * @param maxValue 
-	 */
-	public void setMaxValue(float maxValue) {
-		this.maxValue = maxValue;
-		refactorIndicator();
-	}
-	
-	/**
 	 * Returns the maximum value set for the Indicator
 	 * @return maxValue
 	 */
@@ -267,11 +258,11 @@ public abstract class Indicator extends Element {
 	}
 	
 	/**
-	 * Sets the current value of the Indicator
-	 * @param currentValue 
+	 * Set the maximum value (e.g. float  = 100%)
+	 * @param maxValue
 	 */
-	public void setCurrentValue(float currentValue) {
-		this.currentValue = currentValue;
+	public void setMaxValue(float maxValue) {
+		this.maxValue = maxValue;
 		refactorIndicator();
 	}
 	
@@ -285,6 +276,16 @@ public abstract class Indicator extends Element {
 	 */
 	public float getCurrentValue() {
 		return this.currentValue;
+	}
+
+	/**
+	 * Sets the current value of the Indicator
+	 *
+	 * @param currentValue
+	 */
+	public void setCurrentValue(float currentValue) {
+		this.currentValue = currentValue;
+		refactorIndicator();
 	}
 	
 	private void refactorIndicator() {

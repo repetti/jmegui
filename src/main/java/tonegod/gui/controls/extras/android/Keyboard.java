@@ -9,35 +9,28 @@ import com.jme3.input.event.KeyInputEvent;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.windows.Panel;
 import tonegod.gui.core.ElementManager;
-import tonegod.gui.style.Style;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.effects.Effect;
+import tonegod.gui.style.Style;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author t0neg0d
  */
 public class Keyboard extends Panel {
-	private static enum KeyType {
-		NUMERIC,
-		ALPHA,
-		SYMBOL,
-		OTHER
-	}
-	
 	private boolean Shift = false;
 	private boolean Symbol = false;
-	
 	private List<KeyboardKey> keys = new ArrayList();
 	
 	/**
 	 * Creates a new instance of the Panel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 */
@@ -52,7 +45,7 @@ public class Keyboard extends Panel {
 	
 	/**
 	 * Creates a new instance of the Panel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -62,25 +55,25 @@ public class Keyboard extends Panel {
 	 */
 	private Keyboard(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
 		super(screen, UID, position, dimensions, resizeBorders, defaultImg);
-		
+
 		this.setIsMovable(false);
 		this.setIsResizable(false);
 		this.setScaleNS(false);
 		this.setScaleEW(false);
 		this.setClipPadding(screen.getStyle("Window").getFloat("clipPadding"));
 		this.setResetKeyboardFocus(false);
-		
+
 		populateEffects("Window");
-		
+
 		float nWidth = getWidth()*0.1f-(110*0.1f);
 		float nX = nWidth+10;;
 		float nHeight = getHeight()*0.2f-(60*0.2f);
 		float nY = nHeight+10;
 		float xGap = 10;
-		
+
 		KeyboardKey key = null;
 		Style keyboard = screen.getStyle("Keyboard");
-		
+
 		for (int r = 0; r < 2; r++) {
 			for (int i = 0; i < 10; i++) {
 				KeyType type = KeyType.valueOf(keyboard.getString("R" + r + "K" + i + "KeyType"));
@@ -88,7 +81,7 @@ public class Keyboard extends Panel {
 				String shiftlabel = keyboard.getString("R" + r + "K" + i + "ShiftLabel");
 				String symbollabel = keyboard.getString("R" + r + "K" + i + "SymbolLabel");
 				symbollabel = validateSymbol(symbollabel);
-				
+
 				key = new KeyboardKey(type, KeyInput.KEY_UNLABELED, label.charAt(0), label);
 				key.setShift(type, KeyInput.KEY_UNLABELED, shiftlabel.charAt(0), shiftlabel);
 				key.setSymbol(KeyType.SYMBOL, KeyInput.KEY_UNLABELED, symbollabel.charAt(0), symbollabel);
@@ -99,10 +92,10 @@ public class Keyboard extends Panel {
 				addChild(key.getButton());
 			}
 		}
-		
+
 		// Row 3 - Alpha
 		xGap = 10+(nWidth*0.5f);
-		
+
 		int r = 2;
 		for (int i = 0; i < 9; i++) {
 			KeyType type = KeyType.valueOf(keyboard.getString("R" + r + "K" + i + "KeyType"));
@@ -110,7 +103,7 @@ public class Keyboard extends Panel {
 			String shiftlabel = keyboard.getString("R" + r + "K" + i + "ShiftLabel");
 			String symbollabel = keyboard.getString("R" + r + "K" + i + "SymbolLabel");
 			symbollabel = validateSymbol(symbollabel);
-			
+
 			key = new KeyboardKey(type, KeyInput.KEY_UNLABELED, label.charAt(0), label);
 			key.setShift(type, KeyInput.KEY_UNLABELED, shiftlabel.charAt(0), shiftlabel);
 			key.setSymbol(KeyType.SYMBOL, KeyInput.KEY_UNLABELED, symbollabel.charAt(0), symbollabel);
@@ -120,7 +113,7 @@ public class Keyboard extends Panel {
 			keys.add(key);
 			addChild(key.getButton());
 		}
-		
+
 		r = 3;
 		for (int i = 0; i < 7; i++) {
 			KeyType type = KeyType.valueOf(keyboard.getString("R" + r + "K" + i + "KeyType"));
@@ -128,7 +121,7 @@ public class Keyboard extends Panel {
 			String shiftlabel = keyboard.getString("R" + r + "K" + i + "ShiftLabel");
 			String symbollabel = keyboard.getString("R" + r + "K" + i + "SymbolLabel");
 			symbollabel = validateSymbol(symbollabel);
-			
+
 			key = new KeyboardKey(type, KeyInput.KEY_UNLABELED, label.charAt(0), label);
 			key.setShift(type, KeyInput.KEY_UNLABELED, shiftlabel.charAt(0), shiftlabel);
 			key.setSymbol(KeyType.SYMBOL, KeyInput.KEY_UNLABELED, symbollabel.charAt(0), symbollabel);
@@ -138,7 +131,7 @@ public class Keyboard extends Panel {
 			keys.add(key);
 			addChild(key.getButton());
 		}
-		
+
 		// Fixed Function Keys
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_LSHIFT, '^', keyboard.getString("ShiftLabel"));
 		key.setPosition(10,10+(nY*3));
@@ -146,42 +139,42 @@ public class Keyboard extends Panel {
 		key.createShiftButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_BACK, '^', keyboard.getString("BackspaceLabel"));
 		key.setPosition(xGap+(nX*8),10+(nY*3));
 		key.setDimensions(nWidth+(nWidth*0.5f),nHeight);
 		key.createBackButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_UNLABELED, '^', keyboard.getString("SymbolLabel"));
 		key.setPosition(10,10+(nY*4));
 		key.setDimensions(nWidth+(nWidth*0.5f),nHeight);
 		key.createSymbolButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_SPACE, ' ', keyboard.getString("SpacebarLabel"));
 		key.setPosition(xGap+(nX),10+(nY*4));
 		key.setDimensions(nWidth+(nX*4),nHeight);
 		key.createSpaceButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_UNLABELED, ',', ",");
 		key.setPosition(xGap+(nX*6),10+(nY*4));
 		key.setDimensions(nWidth,nHeight);
 		key.createButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_UNLABELED, '.', ".");
 		key.setPosition(xGap+(nX*7),10+(nY*4));
 		key.setDimensions(nWidth,nHeight);
 		key.createButton();
 		keys.add(key);
 		addChild(key.getButton());
-		
+
 		key = new KeyboardKey(KeyType.OTHER, KeyInput.KEY_RETURN, '^', keyboard.getString("EnterLabel"));
 		key.setPosition(xGap+(nX*8),10+(nY*4));
 		key.setDimensions(nWidth+(nWidth*0.5f),nHeight);
@@ -256,6 +249,13 @@ public class Keyboard extends Panel {
 			if (key.getKeyType() == KeyType.ALPHA || key.getKeyType() == KeyType.NUMERIC)
 				key.setSymbol(symbol);
 		}
+	}
+	
+	private static enum KeyType {
+		NUMERIC,
+		ALPHA,
+		SYMBOL,
+		OTHER
 	}
 	
 	private class KeyboardKey {

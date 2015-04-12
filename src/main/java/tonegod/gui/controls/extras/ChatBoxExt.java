@@ -6,8 +6,6 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.List;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.buttons.CheckBox;
 import tonegod.gui.controls.form.Form;
@@ -24,11 +22,20 @@ import tonegod.gui.core.layouts.FlowLayout;
 import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.UIDUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author t0neg0d
  */
 public abstract class ChatBoxExt extends Panel {
+	protected List<ChatMessage> chatMessages = new ArrayList();
+	protected List<ChatChannel> channels = new ArrayList();
+	float filterLineHeight;
+	float controlSpacing, controlSize, buttonWidth, scrollSize;
+	Vector4f indents;
+	List<Label> displayMessages = new ArrayList();
 	private ScrollPanel saChatArea;
 	private TextField tfChatInput;
 	private ButtonAdapter btnChatSendMsg;
@@ -40,22 +47,11 @@ public abstract class ChatBoxExt extends Panel {
 	private boolean showFilterButton = true;
 	private boolean showChannelLabels = true;
 	private Form chatForm;
-
 	private Window filters = null;
 	private ScrollArea filtersScrollArea = null;
-	float filterLineHeight;
-
-	float controlSpacing, controlSize, buttonWidth, scrollSize;
-	Vector4f indents;
-
 	private int sendKey;
 	private int chatHistorySize = 30;
-	protected List<ChatMessage> chatMessages = new ArrayList();
-
-	protected List<ChatChannel> channels = new ArrayList();
 	private String defaultCommand;
-
-	List<Label> displayMessages = new ArrayList();
 
 	/**
 	 * Creates a new instance of the ChatBoxExt control
@@ -564,60 +560,10 @@ public abstract class ChatBoxExt extends Panel {
 		this.showChannelLabels = showChannelLabels;
 	}
 
-	public class ChatMessage {
-		private ChatChannel channel;
-		private String msg;
-		public ChatMessage(ChatChannel channel, String msg) {
-			this.channel = channel;
-			this.msg = msg;
-		}
-
-		public ChatChannel getChannel() {
-			return channel;
-		}
-		public String getMsg() {
-			return this.msg;
-		}
-	}
-
-	public class ChatChannel {
-		private String UID;
-		private String name;
-		private String filterDisplayText;
-		private Object command;
-		private ColorRGBA color;
-		private boolean visibleToUser;
-		private boolean isFiltered = false;
-
-		public ChatChannel(String UID, String name, Object command, String filterDisplayText, ColorRGBA color, boolean visibleToUser) {
-			this.UID = UID;
-			this.name = name;
-			this.command = command;
-			this.filterDisplayText = filterDisplayText;
-			this.color = color;
-			this.visibleToUser = visibleToUser;
-		}
-
-		public String getUID() { return this.UID; }
-		public String getName() {
-			return this.name;
-		}
-		public Object getCommand() {
-			return this.command;
-		}
-		public ColorRGBA getColor() {
-			return this.color;
-		}
-		public boolean getVisibleToUser() { return visibleToUser; }
-		public void setIsFiltered(boolean isFiltered) { this.isFiltered = isFiltered; }
-		public boolean getIsFiltered() { return this.isFiltered; }
-		public String getFilterDisplayText() { return filterDisplayText; }
-	}
-
 	/**
 	 * Called by the Chat Filter Window.
 	 * @param channel
-	 * @param filter 
+	 * @param filter
 	 */
 	public void setChannelFiltered(ChatChannel channel, boolean filter) {
 		channel.setIsFiltered(filter);
@@ -693,7 +639,7 @@ public abstract class ChatBoxExt extends Panel {
 
 	/**
 	 * Sets the ToolTip text to display for mouse focus of the TextField input
-	 * @param tip 
+	 * @param tip
 	 */
 	public void setToolTipTextInput(String tip) {
 		this.tfChatInput.setToolTipText(tip);
@@ -701,9 +647,78 @@ public abstract class ChatBoxExt extends Panel {
 
 	/**
 	 * Sets the ToolTip text to display for mouse focus of the Send button
-	 * @param tip 
+	 * @param tip
 	 */
 	public void setToolTipSendButton(String tip) {
 		this.btnChatSendMsg.setToolTipText(tip);
+	}
+
+	public class ChatMessage {
+		private ChatChannel channel;
+		private String msg;
+
+		public ChatMessage(ChatChannel channel, String msg) {
+			this.channel = channel;
+			this.msg = msg;
+		}
+
+		public ChatChannel getChannel() {
+			return channel;
+		}
+
+		public String getMsg() {
+			return this.msg;
+		}
+	}
+
+	public class ChatChannel {
+		private String UID;
+		private String name;
+		private String filterDisplayText;
+		private Object command;
+		private ColorRGBA color;
+		private boolean visibleToUser;
+		private boolean isFiltered = false;
+
+		public ChatChannel(String UID, String name, Object command, String filterDisplayText, ColorRGBA color, boolean visibleToUser) {
+			this.UID = UID;
+			this.name = name;
+			this.command = command;
+			this.filterDisplayText = filterDisplayText;
+			this.color = color;
+			this.visibleToUser = visibleToUser;
+		}
+
+		public String getUID() {
+			return this.UID;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public Object getCommand() {
+			return this.command;
+		}
+
+		public ColorRGBA getColor() {
+			return this.color;
+		}
+
+		public boolean getVisibleToUser() {
+			return visibleToUser;
+		}
+
+		public boolean getIsFiltered() {
+			return this.isFiltered;
+		}
+
+		public void setIsFiltered(boolean isFiltered) {
+			this.isFiltered = isFiltered;
+		}
+
+		public String getFilterDisplayText() {
+			return filterDisplayText;
+		}
 	}
 }

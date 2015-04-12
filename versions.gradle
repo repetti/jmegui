@@ -1,0 +1,4 @@
+ext {
+    version_jme = '3.0.+'
+    version_slf4j = '1.7.12'
+}

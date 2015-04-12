@@ -12,13 +12,13 @@ import tonegod.gui.framework.core.Transformable;
  * @author t0neg0d
  */
 public abstract class TemporalAction implements Cloneable {
-	private float duration, time = 0;
-	private Interpolation interpolation;
-	private boolean reverse, complete;
 //	protected AnimElement batch;
 	protected Transformable quad;
 	protected boolean forceJmeTransform = false;
 	protected boolean autoRestart = false;
+	private float duration, time = 0;
+	private Interpolation interpolation;
+	private boolean reverse, complete;
 	private int runCount = 0;
 	
 	public TemporalAction () {
@@ -33,8 +33,11 @@ public abstract class TemporalAction implements Cloneable {
 		this.interpolation = interpolation;
 	}
 	
-	public void setTransformable(Transformable quad) { this.quad = quad; }
 	public Transformable getTransformable() { return this.quad; }
+
+	public void setTransformable(Transformable quad) {
+		this.quad = quad;
+	}
 	
 	public boolean act (float delta) {
 		if (complete) return true;
@@ -53,12 +56,12 @@ public abstract class TemporalAction implements Cloneable {
 		return complete;
 	}
 
-	public void setAutoRestart(boolean autoRestart) {
-		this.autoRestart = autoRestart;
-	}
-	
 	public boolean getAutoRestart() {
 		return this.autoRestart;
+	}
+
+	public void setAutoRestart(boolean autoRestart) {
+		this.autoRestart = autoRestart;
 	}
 	
 	public int getRunCount() { return this.runCount; }

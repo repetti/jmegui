@@ -72,8 +72,10 @@ public class Pool<T> {
 		
 		public T getResource() { return this.resource; }
 		
-		public void setInUse(boolean inUse) { this.inUse = inUse; }
-		
 		public boolean getInUse() { return this.inUse; }
+
+		public void setInUse(boolean inUse) {
+			this.inUse = inUse;
+		}
 	}
 }

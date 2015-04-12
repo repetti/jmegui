@@ -14,28 +14,17 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import tonegod.gui.framework.animation.TemporalAction;
+
+import java.util.*;
 
 /**
  *
  * @author t0neg0d
  */
 public abstract class AnimElement extends Node implements Transformable {
-	public static enum ZOrderEffect {
-		Self,
-		Child,
-		Both,
-		None
-	}
 	public List<TemporalAction> actions = new ArrayList();
 	protected Map<String, QuadData> quads = new LinkedHashMap();
-	private List<QuadData> tempQuads = new LinkedList();
 	protected Texture tex;
 	protected Map<String, TextureRegion> uvs = new HashMap();
 	protected AnimElementMesh mesh;
@@ -57,6 +46,7 @@ public abstract class AnimElement extends Node implements Transformable {
 	protected boolean isMovable = false;
 	protected AnimLayer parentLayer = null;
 	protected float zOrder = -1f;
+	private List<QuadData> tempQuads = new LinkedList();
 	private float zOrderStepMinor = 0.00001f;
 	private Geometry geom;
 	private Vector2f worldPosition = new Vector2f();
@@ -64,7 +54,6 @@ public abstract class AnimElement extends Node implements Transformable {
 	private Vector2f tempV = new Vector2f(),
 			tempV2 = new Vector2f();
 	private Vector4f clippingPosition = new Vector4f(-10000,-10000,10000,10000);
-	
 	public AnimElement(AssetManager am) {
 		this.am = am;
 		mesh = new AnimElementMesh(this);
@@ -73,7 +62,7 @@ public abstract class AnimElement extends Node implements Transformable {
 	public void initialize() {
 		flagForUpdate();
 		mesh.initialize();
-		
+
 		Vector4f clip = null;
 		boolean useClip = false;
 		boolean reset = false;
@@ -99,45 +88,45 @@ public abstract class AnimElement extends Node implements Transformable {
 			mat.setBoolean("UseClipping", false);
 		}
 		mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-		
+
 		geom = new Geometry();
 		geom.setMesh(mesh);
-		
+
 		attachChild(geom);
 		setMaterial(mat);
-		
+
 		flagForUpdate();
 		geom.updateModelBound();
-	}
-	
-	public void setZOrderEffect(ZOrderEffect zOrderEffect) {
-		this.zOrderEffect = zOrderEffect;
 	}
 	
 	public ZOrderEffect getZOrderEffect() {
 		return this.zOrderEffect;
 	}
-	
-	public void setParentLayer(AnimLayer layer) {
-		this.parentLayer = layer;
+
+	public void setZOrderEffect(ZOrderEffect zOrderEffect) {
+		this.zOrderEffect = zOrderEffect;
 	}
 	
 	public AnimLayer getParentLayer() {
 		return this.parentLayer;
 	}
+
+	public void setParentLayer(AnimLayer layer) {
+		this.parentLayer = layer;
+	}
 	
 	public boolean getIsInitialized() {
 		return this.mesh.init;
+	}
+
+	public Texture getTexture() {
+		return tex;
 	}
 	
 	public void setTexture(Texture tex) {
 		this.tex = tex;
 		if (mat != null)
 			mat.setTexture("ColorMap", tex);
-	}
-	
-	public Texture getTexture() {
-		return tex;
 	}
 	
 	public void addTextureRegion(String regionKey, TextureRegion tr) {
@@ -171,7 +160,7 @@ public abstract class AnimElement extends Node implements Transformable {
 		if (zOrder == -1)
 			zOrder = getPositionZ();
 		Vector2f pos = new Vector2f(position).subtract(origin);
-		
+
 		QuadData qd = new QuadData(this, quadKey, uvs.get(regionKey), pos.x, pos.y, uvs.get(regionKey).getRegionWidth(), uvs.get(regionKey).getRegionHeight(), origin);
 		quads.put(quadKey, qd);
 		qd.setPositionZ(zOrder);
@@ -184,7 +173,7 @@ public abstract class AnimElement extends Node implements Transformable {
 		if (zOrder == -1)
 			zOrder = getPositionZ();
 		Vector2f pos = new Vector2f(position).subtract(origin);
-		
+
 		QuadData qd = new QuadData(this, quadKey, uvs.get(regionKey), pos.x, pos.y, uvs.get(regionKey).getRegionWidth(), uvs.get(regionKey).getRegionHeight(), origin);
 		qd.parent = quads.get(parentKey);
 	//	qd.setPositionX(qd.getPositionX()-qd.parent.getPositionX());
@@ -306,7 +295,7 @@ public abstract class AnimElement extends Node implements Transformable {
 	//	mesh.update(tpf);
 	//	if (mesh.updateCol)
 	//		geom.updateModelBound();
-		
+
 		for (TemporalAction a : actions) {
 			a.act(tpf);
 			if (a.getTime() >= a.getDuration() && a.getAutoRestart()) {
@@ -320,7 +309,7 @@ public abstract class AnimElement extends Node implements Transformable {
 			}
 		}
 		animElementUpdate(tpf);
-		
+
 		mesh.update(tpf);
 		if (mesh.updateCol)
 			geom.updateModelBound();
@@ -328,219 +317,228 @@ public abstract class AnimElement extends Node implements Transformable {
 	
 	public abstract void animElementUpdate(float tpf);
 	
+	@Override
+	public void setPosition(float x, float y) {
+		this.position.set(x,y);
+		mesh.buildPosition = true;
+	}
+
+	@Override
+	public void setScale(float x, float y) {
+		this.scale.set(x,y);
+		mesh.buildPosition = true;
+
+	}
+
+	@Override
+	public void setOrigin(float x, float y) {
+		this.origin.set(x,y);
+		mesh.buildPosition = true;
+	}
+
+	@Override
+	public void setDimensions(float w, float h) {
+		this.dimensions.set(w, h);
+		mesh.buildPosition = true;
+	}
+
+	@Override
+	public void setSkew(float x, float y) {
+		this.skew.set(x, y);
+		mesh.buildPosition = true;
+	}
+
+	@Override
+	public float getPositionX() {
+		return position.x;
+	}
+
 	//<editor-fold desc="TRANSFORMABLE">
 	@Override
 	public void setPositionX(float x) {
 		this.position.x = x;
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getPositionY() {
+		return position.y;
+	}
+
 	@Override
 	public void setPositionY(float y) {
 		this.position.y = y;
 		mesh.buildPosition = true;
 	}
+
 	@Override
-	public void setPosition(float x, float y) {
-		this.position.set(x,y);
-		mesh.buildPosition = true;
+	public float getRotation() {
+		return rotation;
 	}
-	@Override
-	public void setPosition(Vector2f pos) {
-		this.position.set(pos);
-		mesh.buildPosition = true;
-	}
+
 	@Override
 	public void setRotation(float rotation) {
 		this.rotation = rotation;
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getScaleX() {
+		return scale.x;
+	}
+
 	@Override
 	public void setScaleX(float scaleX) {
 		this.scale.x = scaleX;
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getScaleY() {
+		return scale.y;
+	}
+
 	@Override
 	public void setScaleY(float scaleY) {
 		this.scale.y = scaleY;
 		mesh.buildPosition = true;
 	}
+
 	@Override
-	public void setScale(float x, float y) {
-		this.scale.set(x,y);
-		mesh.buildPosition = true;
-		
+	public Vector2f getOrigin() {
+		return this.origin;
 	}
-	@Override
-	public void setScale(Vector2f scale) {
-		this.scale.set(scale);
-		mesh.buildPosition = true;
-	}
-	@Override
-	public void setOrigin(float x, float y) {
-		this.origin.set(x,y);
-		mesh.buildPosition = true;
-	}
+
 	@Override
 	public void setOrigin(Vector2f origin) {
 		this.origin.set(origin);
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getOriginX() {
+		return this.origin.x;
+	}
+
 	@Override
 	public void setOriginX(float originX) {
 		this.origin.setX(originX);
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getOriginY() {
+		return this.origin.y;
+	}
+
 	@Override
 	public void setOriginY(float originY) {
 		this.origin.setY(originY);
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public ColorRGBA getColor() {
+		return color;
+	}
+
 	@Override
 	public void setColor(ColorRGBA color) {
 		this.color.set(color);
 		mesh.buildColor = true;
 	}
+
+	@Override
+	public float getColorR() {
+		return color.r;
+	}
+
 	@Override
 	public void setColorR(float r) {
 		this.color.r = r;
 		mesh.buildColor = true;
 	}
+
+	@Override
+	public float getColorG() {
+		return color.g;
+	}
+
 	@Override
 	public void setColorG(float g) {
 		this.color.g = g;
 		mesh.buildColor = true;
 	}
+
+	@Override
+	public float getColorB() {
+		return color.b;
+	}
+
 	@Override
 	public void setColorB(float b) {
 		this.color.b = b;
 		mesh.buildColor = true;
 	}
+
+	@Override
+	public float getColorA() {
+		return color.g;
+	}
+
 	@Override
 	public void setColorA(float a) {
 		this.color.a = a;
 		mesh.buildColor = true;
 	}
+
 	@Override
-	public void setTCOffsetX(float x) {
-		
+	public float getWidth() {
+		return dimensions.x;
 	}
-	@Override
-	public void setTCOffsetY(float y) {
-		
-	}
-	@Override
-	public void setDimensions(Vector2f dim) {
-		this.dimensions.set(dim);
-		mesh.buildPosition = true;
-	}
-	@Override
-	public void setDimensions(float w, float h) {
-		this.dimensions.set(w,h);
-		mesh.buildPosition = true;
-	}
+
 	@Override
 	public void setWidth(float w) {
 		this.dimensions.setX(w);
 		mesh.buildPosition = true;
 	}
+
+	@Override
+	public float getHeight() {
+		return dimensions.y;
+	}
+
 	@Override
 	public void setHeight(float h) {
 		this.dimensions.setY(h);
 		mesh.buildPosition = true;
 	}
+
 	@Override
-	public void setSkew(Vector2f skew) {
-		this.skew.set(skew);
-		mesh.buildPosition = true;
+	public float getTCOffsetX() {
+		return 0;
 	}
+
 	@Override
-	public void setSkew(float x, float y) {
-		this.skew.set(x,y);
-		mesh.buildPosition = true;
+	public void setTCOffsetX(float x) {
+
 	}
+
 	@Override
-	public void setSkewX(float x) {
-		this.skew.setX(x);
-		mesh.buildPosition = true;
+	public float getTCOffsetY() {
+		return 0;
 	}
+
 	@Override
-	public void setSkewY(float y) {
-		this.skew.setY(y);
-		mesh.buildPosition = true;
+	public void setTCOffsetY(float y) {
+
 	}
+
 	@Override
-	public void setIgnoreMouse(boolean ignoreMouse) {
-		this.ignoreMouse = ignoreMouse;
+	public float getPositionZ() {
+		return z;
 	}
-	@Override
-	public void setIsMovable(boolean isMovable) {
-		this.isMovable = isMovable;
-	}
-	
-	@Override
-	public float getPositionX() {
-		return position.x;
-	}
-	@Override
-	public float getPositionY() {
-		return position.y;
-	}
-	@Override
-	public float getRotation() {
-		return rotation;
-	}
-	@Override
-	public float getScaleX() {
-		return scale.x;
-	}
-	@Override
-	public float getScaleY() {
-		return scale.y;
-	}
-	@Override
-	public Vector2f getOrigin() {
-		return this.origin;
-	}
-	@Override
-	public float getOriginX() {
-		return this.origin.x;
-	}
-	@Override
-	public float getOriginY() {
-		return this.origin.y;
-	}
-	@Override
-	public ColorRGBA getColor() {
-		return color;
-	}
-	@Override
-	public float getColorR() {
-		return color.r;
-	}
-	@Override
-	public float getColorG() {
-		return color.g;
-	}
-	@Override
-	public float getColorB() {
-		return color.b;
-	}
-	@Override
-	public float getColorA() {
-		return color.g;
-	}
-	@Override
-	public float getWidth() {
-		return dimensions.x;
-	}
-	@Override
-	public float getHeight() {
-		return dimensions.y;
-	}
-	@Override
-	public float getTCOffsetX() { return 0; }
-	@Override
-	public float getTCOffsetY() { return 0; }
+
 	@Override
 	public void setPositionZ(float z) {
 		this.z = z;
@@ -551,67 +549,120 @@ public abstract class AnimElement extends Node implements Transformable {
 		}
 		mesh.buildPosition = true;
 	}
-	
-	@Override
-	public float getPositionZ() { return z; }
+
 	@Override
 	public Vector2f getPosition() { return this.position; }
+
+	@Override
+	public void setPosition(Vector2f pos) {
+		this.position.set(pos);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public Vector2f getScale() { return scale; }
+
+	@Override
+	public void setScale(Vector2f scale) {
+		this.scale.set(scale);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public Vector2f getDimensions() {
 		return this.dimensions;
 	}
+
+	@Override
+	public void setDimensions(Vector2f dim) {
+		this.dimensions.set(dim);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public Vector2f getTCOffset() {
 		return null;
 	}
+
 	@Override
 	public Vector2f getSkew() {
 		return this.skew;
 	}
+
+	@Override
+	public void setSkew(Vector2f skew) {
+		this.skew.set(skew);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public float getSkewX() {
 		return skew.x;
 	}
+
+	@Override
+	public void setSkewX(float x) {
+		this.skew.setX(x);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public float getSkewY() {
 		return skew.y;
 	}
+
+	@Override
+	public void setSkewY(float y) {
+		this.skew.setY(y);
+		mesh.buildPosition = true;
+	}
+
 	@Override
 	public boolean getIgnoreMouse() {
 		return this.ignoreMouse;
 	}
+
+	@Override
+	public void setIgnoreMouse(boolean ignoreMouse) {
+		this.ignoreMouse = ignoreMouse;
+	}
+
 	@Override
 	public boolean getIsMovable() {
 		return this.isMovable;
 	}
-	
+
+	@Override
+	public void setIsMovable(boolean isMovable) {
+		this.isMovable = isMovable;
+	}
+
 	@Override
 	public void addAction(TemporalAction action) {
 		action.setTransformable(this);
 		actions.add(action);
 	}
+
 	@Override
 	public boolean getContainsAction(TemporalAction action) {
 		return actions.contains(action);
+	}
+
+	public String getElementKey() {
+		return elementKey;
 	}
 	//</editor-fold>
 	
 	public void setElementKey(String key) {
 		this.elementKey = key;
 	}
-	
-	public String getElementKey() {
-		return elementKey;
+
+	public <T extends Object> T getDataStruct() {
+		return (T) dataStruct;
 	}
 	
 	public <T extends Object> void setDataStruct(T dataStruct) {
 		this.dataStruct = dataStruct;
-	}
-	
-	public <T extends Object> T getDataStruct() {
-		return (T)dataStruct;
 	}
 	
 	// Potential Additions
@@ -680,6 +731,15 @@ public abstract class AnimElement extends Node implements Transformable {
 			setWorldTransforms(qd);
 		}
 	}
+
 	public void resetClippingPosition() { clippingPosition.set(-10000,-10000,10000,10000); }
+
 	public Vector4f getClippingPosition() { return clippingPosition; }
+
+	public static enum ZOrderEffect {
+		Self,
+		Child,
+		Both,
+		None
+	}
 }

@@ -12,11 +12,8 @@ import com.jme3.input.event.TouchEvent;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.Map;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
-import tonegod.gui.core.layouts.Layout;
-import tonegod.gui.core.utils.BitmapTextUtil;
 import tonegod.gui.core.utils.UIDUtil;
 import tonegod.gui.framework.animation.Interpolation;
 import tonegod.gui.framework.core.util.GameTimer;
@@ -29,18 +26,11 @@ import tonegod.gui.listeners.TouchListener;
  * @author t0neg0d
  */
 public class ScrollPanel extends Element {
-	public static enum ScrollDirection {
-		Up,
-		Down,
-		Left,
-		Right
-	}
-	
-	private ScrollPanel self;
 	protected ScrollPanelBounds innerBounds;
 	protected Element scrollableArea;
 	protected ScrollPanelBarV vScrollBar;
 	protected ScrollPanelBarH hScrollBar;
+	private ScrollPanel self;
 	private float scrollSize = 25;
 	private int buttonInc = 1;
 	private int trackInc = 10;
@@ -56,10 +46,9 @@ public class ScrollPanel extends Element {
 	private float touchOffsetY = 0;
 	private boolean flingDir = true;
 	private float flingSpeed = 1;
-	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 */
 	public ScrollPanel(ElementManager screen) {
@@ -72,7 +61,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 */
@@ -86,7 +75,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -100,7 +89,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param position A Vector2f containing the x/y position of the Element
 	 * @param dimensions A Vector2f containing the width/height dimensions of the Element
@@ -113,7 +102,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control the Element is to be added to
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -128,7 +117,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -143,7 +132,7 @@ public class ScrollPanel extends Element {
 	
 	/**
 	 * Creates a new instance of the ScrollPanel control
-	 * 
+	 *
 	 * @param screen The screen control
 	 * @param UID A unique String identifier for the Element
 	 * @param position A Vector2f containing the x/y position of the Element
@@ -154,14 +143,14 @@ public class ScrollPanel extends Element {
 	public ScrollPanel(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
 		super(screen, UID, position, dimensions, Vector4f.ZERO, null);
 		setAsContainerOnly();
-		
+
 		scrollSize = screen.getStyle("ScrollArea#VScrollBar").getFloat("defaultControlSize");
-		
-		innerBounds = new ScrollPanelBounds(screen, UID + "innerBounds", Vector2f.ZERO, dimensions, resizeBorders, defaultImg);	
+
+		innerBounds = new ScrollPanelBounds(screen, UID + "innerBounds", Vector2f.ZERO, dimensions, resizeBorders, defaultImg);
 		innerBounds.setScaleEW(true);
 		innerBounds.setScaleNS(true);
 		innerBounds.setDocking(Docking.SW);
-		
+
 		scrollableArea = new Element(screen, UID + "scrollableArea", Vector2f.ZERO, dimensions, Vector4f.ZERO, null) {
 			@Override
 			public void setControlClippingLayer(Element clippingLayer) {
@@ -170,12 +159,12 @@ public class ScrollPanel extends Element {
 				}
 			}
 		};
-		
+
 		scrollableArea.setScaleEW(false);
 		scrollableArea.setScaleNS(false);
 		scrollableArea.setDocking(Docking.NW);
 		scrollableArea.setAsContainerOnly();
-		
+
 		scrollableArea.setFontColor(screen.getStyle("ScrollArea").getColorRGBA("fontColor"));
 		scrollableArea.setFontSize(screen.getStyle("ScrollArea").getFloat("fontSize"));
 		scrollableArea.setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("ScrollArea").getString("textAlign")));
@@ -183,22 +172,22 @@ public class ScrollPanel extends Element {
 		scrollableArea.setTextWrap(LineWrapMode.valueOf(screen.getStyle("ScrollArea").getString("textWrap")));
 		scrollableArea.setTextPaddingByKey("ScrollArea","textPadding");
 		scrollableArea.setTextClipPaddingByKey("ScrollArea","scrollAreaPadding");
-		
+
 		innerBounds.addChild(scrollableArea);
 		scrollableArea.addClippingLayer(innerBounds);
 		addChild(innerBounds);
-		
+
 		vScrollBar = new ScrollPanelBarV(this);
 		addChild(vScrollBar, true);
 		hScrollBar = new ScrollPanelBarH(this);
 		addChild(hScrollBar, true);
-		
+
 		setTextPaddingByKey("ScrollArea","textPadding");
-		
+
 		addClippingLayer(this);
-		
+
 		initFlingTimer();
-		
+
 		self = this;
 	}
 	
@@ -208,7 +197,7 @@ public class ScrollPanel extends Element {
 			public void timerUpdateHook(float tpf) {
 				float currentY = getScrollableAreaVerticalPosition();
 				float nextInc = 15*flingSpeed*(1f-this.getPercentComplete());
-				
+
 				if (flingDir) {
 					float nextY = currentY+nextInc;
 					if (nextY <= scrollableArea.getHeight() && nextY >= innerBounds.getHeight()) {
@@ -225,7 +214,7 @@ public class ScrollPanel extends Element {
 			}
 			@Override
 			public void onComplete(float time) {
-				
+
 			}
 		};
 		flingTimer.setInterpolation(Interpolation.exp5Out);
@@ -262,6 +251,10 @@ public class ScrollPanel extends Element {
 		scrollToTop();
 		scrollToLeft();
 	}
+
+	public boolean getUseVerticalWrap() {
+		return this.verticalWrap;
+	}
 	
 	public void setUseVerticalWrap(boolean verticalWrap) {
 		this.verticalWrap = verticalWrap;
@@ -273,9 +266,9 @@ public class ScrollPanel extends Element {
 			reshape();
 		}
 	}
-	
-	public boolean getUseVerticalWrap() {
-		return this.verticalWrap;
+
+	public float getScrollSize() {
+		return this.scrollSize;
 	}
 	
 	public void setScrollSize(float scrollSize) {
@@ -285,10 +278,6 @@ public class ScrollPanel extends Element {
 		hScrollBar.updateScrollSize();
 	}
 	
-	public float getScrollSize() {
-		return this.scrollSize;
-	}
-	
 	@Override
 	public void setText(String text) {
 		scrollableArea.removeTextElement();
@@ -296,8 +285,8 @@ public class ScrollPanel extends Element {
 		reshape();
 		scrollableArea.setTextPaddingByKey("ScrollArea","textPadding");
 	}
-	
-	public void updateForResize() { 
+
+	public void updateForResize() {
 		boolean vHide = false,
 				vShow = false,
 				hHide = false,
@@ -306,7 +295,7 @@ public class ScrollPanel extends Element {
 				hResize = false;
 		boolean vDir = true,
 				hDir = true;
-		
+
 		if (verticalWrap) {
 			if (scrollableArea.getTextElement() != null) {
 				if (scrollableArea.getElements().size() > 0) {
@@ -321,7 +310,7 @@ public class ScrollPanel extends Element {
 			}
 			scrollToTop();
 		}
-		
+
 		if (getHeight() < scrollableArea.getHeight()) {
 			if (innerBounds.getWidth() == getWidth())
 				vResize = true;
@@ -350,7 +339,7 @@ public class ScrollPanel extends Element {
 				hDir = true;
 			}
 		}
-		
+
 		if (vResize) {
 			if (!vDir) {
 				innerBounds.setWidth(getWidth()-scrollSize);
@@ -373,7 +362,7 @@ public class ScrollPanel extends Element {
 		}
 		if (vShow)		vScrollBar.show();
 		else if (vHide)	vScrollBar.hide();
-		
+
 		if (!verticalWrap) {
 			if (hShow)		{
 				hScrollBar.show();
@@ -384,11 +373,11 @@ public class ScrollPanel extends Element {
 				scrollableArea.setY(scrollableArea.getY()+scrollSize);
 			}
 		}
-		
+
 		setVThumbSize();
 		if (!verticalWrap)
 			setHThumbSize();
-		
+
 		if (!verticalWrap) {
 			if (scrollableArea.getWidth() > innerBounds.getWidth() && scrollableArea.getX() < 0) {
 				scrollToRight();
@@ -430,10 +419,10 @@ public class ScrollPanel extends Element {
 	/**
 	 * Returns the height difference between the scrollable area's total height and the
 	 * scroll panel's bounds.
-	 * 
+	 *
 	 * Note: This returns a negative float value if the scrollable area is smaller than it's bounds.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 */
 	public float getVerticalScrollDistance() {
 		float diff =  scrollableArea.getHeight()-innerBounds.getHeight();
@@ -505,14 +494,14 @@ public class ScrollPanel extends Element {
 			onScrollContent(ScrollDirection.Up);
 		else
 			onScrollContent(ScrollDirection.Down);
-		
+
 	}
-	//</editor-fold>
 	
 	//<editor-fold desc="Horizontal Scrolling">
 	public float getScrollableAreaHorizontalPosition() {
 		return innerBounds.getWidth()-(scrollableArea.getX()+scrollableArea.getWidth());
 	}
+	//</editor-fold>
 	
 	public float getScrollBoundsWidth() {
 		return this.innerBounds.getWidth();
@@ -525,10 +514,10 @@ public class ScrollPanel extends Element {
 	/**
 	 * Returns the width difference between the scrollable area's total width and the
 	 * scroll panel's bounds.
-	 * 
+	 *
 	 * Note: This returns a negative float value if the scrollable area is smaller than it's bounds.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 */
 	public float getHorizontalScrollDistance() {
 		float diff =  scrollableArea.getWidth()-innerBounds.getWidth();
@@ -592,14 +581,14 @@ public class ScrollPanel extends Element {
 		else
 			onScrollContent(ScrollDirection.Right);
 	}
+
+	public boolean getUseContentPaging() {
+		return pagingEnabled;
+	}
 	//</editor-fold>
 	
 	public void setUseContentPaging(boolean pagingEnabled) {
 		this.pagingEnabled = pagingEnabled;
-	}
-	
-	public boolean getUseContentPaging() {
-		return pagingEnabled;
 	}
 	
 	private void onScrollContent(ScrollDirection direction) {
@@ -628,26 +617,32 @@ public class ScrollPanel extends Element {
 	}
 	
 	public void onScrollContentHook(ScrollDirection direction) {  }
+
+	public int getButtonInc() {
+		return this.buttonInc;
+	}
 	
 	public void setButtonInc(int buttonInc) { this.buttonInc = buttonInc; }
-	
-	public int getButtonInc() { return this.buttonInc; }
+
+	public int getTrackInc() {
+		return this.trackInc;
+	}
 	
 	public void setTrackInc(int trackInc) { this.trackInc = trackInc; }
 	
-	public int getTrackInc() { return this.trackInc; }
-
 	public ScrollPanelBarV getVerticalScrollBar() { return this.vScrollBar; }
-	
+
 	public ScrollPanelBarH getHorizontalScrollBar() { return this.hScrollBar; }
 	
 	public Element getScrollBounds() { return this.innerBounds; }
 	
 	public Element getScrollableArea() { return this.scrollableArea; }
 	
-	public void setFlingEnabled(boolean flingEnabled) { this.flingEnabled = flingEnabled; }
-	
 	public boolean getFlingEnabled() { return this.flingEnabled; }
+
+	public void setFlingEnabled(boolean flingEnabled) {
+		this.flingEnabled = flingEnabled;
+	}
 	
 	public void configureAsChildOfScrollPanel() {
 		scrollChild = true;
@@ -661,6 +656,13 @@ public class ScrollPanel extends Element {
 		vScrollBar.setScalingEnabled(false);
 		hScrollBar.setScalingEnabled(false);
 		setDocking(Element.Docking.SW);
+	}
+
+	public static enum ScrollDirection {
+		Up,
+		Down,
+		Left,
+		Right
 	}
 	
 	public class ScrollPanelBounds extends Element implements MouseWheelListener, TouchListener, FlingListener {

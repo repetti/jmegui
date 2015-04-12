@@ -5,6 +5,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
+
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
@@ -13,31 +14,27 @@ import java.nio.ShortBuffer;
  * @author t0neg0d
  */
 public class AnimElementMesh extends Mesh {
-	AnimElement batch;
-	private int vCount = 0;
-	private int vIndex = 0;
 	public boolean init = false;
-	private Vector2f dim = new Vector2f(0,0);
-	private Vector2f skew = new Vector2f(0,0);
-	private Vector2f tempV = new Vector2f(0,0);
-	private Vector2f tempV2 = new Vector2f(0,0);
-	
 	public boolean buildPosition = true;
 	public boolean buildTexCoords = true;
 	public boolean buildColor = true;
 	public boolean buildIndices = true;
-	
+	AnimElement batch;
+	float[] verts;
+	short[] indices;
+	int bufferSetCount = 0;
+	boolean updateCol = false;
+	float cos, sin, x, y;
+	private int vCount = 0;
+	private int vIndex = 0;
+	private Vector2f dim = new Vector2f(0,0);
+	private Vector2f skew = new Vector2f(0,0);
+	private Vector2f tempV = new Vector2f(0,0);
+	private Vector2f tempV2 = new Vector2f(0,0);
 	private FloatBuffer vb;
 	private ShortBuffer ib;
 	private FloatBuffer tcb;
 	private FloatBuffer cb;
-	
-	float[] verts;
-	short[] indices;
-	
-	int bufferSetCount = 0;
-	
-	boolean updateCol = false;
 	
 	public AnimElementMesh(AnimElement batch) {
 		this.batch = batch;
@@ -65,19 +62,19 @@ public class AnimElementMesh extends Mesh {
 	private void updateMeshData(float tpf) {
 		vIndex = 0;
 		vCount = 0;
-		
+
 		for (QuadData qd : batch.getQuads().values()) {
 			qd.update(tpf);
 			addQuad(qd);
 			vIndex++;
 		}
-		
+
 		setBuffers();
 	}
 	
 	private void addQuad(QuadData qd) {
 		qd.index = vIndex;
-                
+
 		dim.set(qd.getWidth(), qd.getHeight());
 		skew.set(qd.getSkew());
 
@@ -138,12 +135,12 @@ public class AnimElementMesh extends Mesh {
 		/*
 		 * // Test for Samsung devices... slower than above
 		qd.index = vIndex;
-		
+
 		dim.set(qd.getWidth(), qd.getHeight());
 		skew.set(qd.getSkew());
-		
+
 		int index = qd.index * 12;
-		
+
 		applyTransforms(qd, -skew.x, -skew.y);
 		vb.put(index,	tempV.x);
 		vb.put(index+1,	tempV.y);
@@ -163,7 +160,7 @@ public class AnimElementMesh extends Mesh {
 		vb.put(index+9,	tempV.x);
 		vb.put(index+10,tempV.y);
 		vb.put(index+11,qd.getPositionZ());
-		
+
 		if (buildColor) {
 			index = qd.index*16;
 			int indexX = 0;
@@ -175,7 +172,7 @@ public class AnimElementMesh extends Mesh {
 				indexX += 4;
 			}
 		}
-		
+
 		if (buildTexCoords) {
 			index = qd.index*8;
 			tcb.put(index,	qd.getTextureRegion().getU()+qd.getTCOffsetX());
@@ -187,7 +184,7 @@ public class AnimElementMesh extends Mesh {
 			tcb.put(index+6,qd.getTextureRegion().getU2()+qd.getTCOffsetX());
 			tcb.put(index+7,qd.getTextureRegion().getV2()+qd.getTCOffsetY());
 		}
-		
+
 		if (buildIndices) {
 			index = qd.index*6;
 			ib.put(index,	(short)(vCount+2));
@@ -197,7 +194,7 @@ public class AnimElementMesh extends Mesh {
 			ib.put(index+4,	(short)(vCount+3));
 			ib.put(index+5,	(short)(vCount+2));
 		}
-		
+
 		vCount += 4;
 		*/
 	}
@@ -231,8 +228,7 @@ public class AnimElementMesh extends Mesh {
 				a = null;
 		}
 	}
-	
-	float cos, sin, x, y;
+
 	public Vector2f rot(Vector2f p, float angle) {
 		cos = FastMath.cos(angle*FastMath.DEG_TO_RAD);
 		sin = FastMath.sin(angle*FastMath.DEG_TO_RAD);

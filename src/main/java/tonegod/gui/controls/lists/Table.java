@@ -10,25 +10,15 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import tonegod.gui.controls.buttons.Button;
 import tonegod.gui.controls.buttons.ButtonAdapter;
 import tonegod.gui.controls.scrolling.ScrollArea;
 import tonegod.gui.core.Element;
 import tonegod.gui.core.ElementManager;
 import tonegod.gui.core.utils.UIDUtil;
-import tonegod.gui.listeners.KeyboardListener;
-import tonegod.gui.listeners.MouseButtonListener;
-import tonegod.gui.listeners.MouseMovementListener;
-import tonegod.gui.listeners.MouseWheelListener;
-import tonegod.gui.listeners.TabFocusListener;
+import tonegod.gui.listeners.*;
+
+import java.util.*;
 
 /**
  * A table control that can act like a tree, a table, a tree table or a list, depending
@@ -159,27 +149,11 @@ import tonegod.gui.listeners.TabFocusListener;
  */
 public abstract class Table extends ScrollArea implements MouseMovementListener, MouseWheelListener, MouseButtonListener, TabFocusListener, KeyboardListener {
 
-    public enum ColumnResizeMode {
-
-        NONE, AUTO_ALL, AUTO_FIRST, AUTO_LAST;
-    }
-
-    public enum SelectionMode {
-
-        NONE, ROW, MULTIPLE_ROWS, CELL, MULTIPLE_CELLS;
-
-        public boolean isEnabled() {
-            return !this.equals(NONE);
-        }
-
-        public boolean isSingle() {
-            return this.equals(ROW) || this.equals(CELL);
-        }
-
-        public boolean isMultiple() {
-            return this.equals(MULTIPLE_CELLS) || this.equals(MULTIPLE_ROWS);
-        }
-    }
+    private final List<TableColumn> columns = new ArrayList<TableColumn>();
+    private final float headerHeight;
+    private final float rowHeight;
+    protected int currentRowIndex = -1;
+    protected int currentColumnIndex = -1;
     private List<TableRow> rows = new ArrayList();
     private List<Integer> selectedRows = new ArrayList();
     private Map<Integer, List<Integer>> selectedCells = new HashMap();
@@ -187,12 +161,7 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     private SelectionMode selectionMode = SelectionMode.ROW;
     private float tablePadding = 1;
     private ColorRGBA highlightColor;
-    protected int currentRowIndex = -1;
-    protected int currentColumnIndex = -1;
     private boolean shift = false, ctrl = false;
-    private final List<TableColumn> columns = new ArrayList<TableColumn>();
-    private final float headerHeight;
-    private final float rowHeight;
     private Element clipLayer;
     private ColumnResizeMode columnResizeMode = ColumnResizeMode.NONE;
     private boolean sortable;
@@ -205,235 +174,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     private boolean headersVisible = true;
     private boolean collapseChildrenOnParentCollapse = true;
     private boolean enableKeyboardNavigation = true;
-
-    public static class TableCell extends Element implements Comparable<TableCell> {
-
-        private Object value;
-        private String expandImg;
-        private String collapseImg;
-        private ButtonAdapter expanderButton;
-        private Vector2f cellArrowSize;
-        private String cellArrowImg;
-        private Vector4f cellArrowResizeBorders;
-
-        public TableCell(ElementManager screen, String label, Object value) {
-            super(screen, UIDUtil.getUID(), Vector2f.ZERO, screen.getStyle("Table#Cell").getVector2f("defaultSize"), screen.getStyle("Table#Cell").getVector4f("resizeBorders"), screen.getStyle("Table#Cell").getString("defaultImg"));
-            init(label, value);
-        }
-
-        public TableCell(ElementManager screen, String label, Object value, Vector2f dimensions, Vector4f resizeBorders, String texturePath) {
-            super(screen, UIDUtil.getUID(), Vector2f.ZERO, dimensions, resizeBorders, texturePath);
-            init(label, value);
-        }
-
-        public Button getExpanderButton() {
-            return expanderButton;
-        }
-
-        private void setExpanderIcon() {
-            // Decide whether to show an expander button, and how much to indent text by
-            final TableRow row = (TableRow) getElementParent();
-            if (row != null) {
-
-                final int cellIndex = new ArrayList<Element>(row.getElements()).indexOf(this);
-                TableRow r = row;
-                int depth = 0;
-                if (cellIndex == 0) {
-                    // Find the depth of row (this determines indent). Only need to do this on first row
-                    while (r.parentRow != null) {
-                        r = r.parentRow;
-                        depth++;
-                    }
-                }
-
-                // Should we actually show a button?
-                boolean shouldShow = row.table.isTree && cellIndex == 0 && !row.isLeaf();
-                if (shouldShow && expanderButton == null) {
-
-                    expanderButton = new ButtonAdapter(screen, orgPosition, cellArrowSize, cellArrowResizeBorders, cellArrowImg) {
-                        @Override
-                        public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
-                            row.setExpanded(!row.isExpanded());
-                        }
-                    };
-                    expanderButton.setX((depth * cellArrowSize.x));
-                    expanderButton.setDocking(null);
-                    expanderButton.setScaleEW(false);
-                    expanderButton.setScaleNS(false);
-                    addChild(expanderButton);
-                } else if (!shouldShow && expanderButton != null) {
-                    removeExpanderButton();
-                }
-
-                // Indent
-                setTextPosition((row.table.isTree && cellIndex == 0 ? cellArrowSize.x : 0) + (depth * cellArrowSize.x), getTextPosition().y);
-
-                // Set the icon
-                if (expanderButton != null) {
-                    expanderButton.setY((row.getHeight() - cellArrowSize.y) / 2f);
-                    if (row.isExpanded()) {
-                        expanderButton.setButtonIcon(cellArrowSize.x, cellArrowSize.y, collapseImg);
-                    } else {
-                        expanderButton.setButtonIcon(cellArrowSize.x, cellArrowSize.y, expandImg);
-                    }
-                    expanderButton.setControlClippingLayer(row.table.clipLayer);
-                }
-            }
-        }
-
-        private void init(String label, Object value) {
-
-            expandImg = screen.getStyle("Table#Cell").getString("expandImg");
-            collapseImg = screen.getStyle("Table#Cell").getString("collapseImg");
-            cellArrowSize = screen.getStyle("Table#Cell").getVector2f("arrowSize");
-            cellArrowResizeBorders = screen.getStyle("Table#Cell").getVector4f("arrowResizeBorders");
-            cellArrowImg = screen.getStyle("Table#Cell").getString("arrowImg");
-
-            // Load default font info
-            setFontColor(screen.getStyle("Table#Cell").getColorRGBA("fontColor"));
-            setFontSize(screen.getStyle("Table#Cell").getFloat("fontSize"));
-            setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("Table#Cell").getString("textAlign")));
-            setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("Table#Cell").getString("textVAlign")));
-            setTextWrap(LineWrapMode.valueOf(screen.getStyle("Table#Cell").getString("textWrap")));
-            setTextPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
-            setTextClipPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
-
-            setText(label);
-            setIgnoreMouse(true);
-            this.value = value;
-            setDocking(null);
-            setScaleEW(false);
-            setScaleNS(false);
-        }
-
-        @Override
-        public int compareTo(TableCell o) {
-            if (value instanceof Comparable && o.value instanceof Comparable) {
-                return ((Comparable) value).compareTo((Comparable) o.value);
-            }
-            return toString().compareTo(o.toString());
-        }
-
-        private void removeExpanderButton() {
-            if (expanderButton != null) {
-                removeChild(expanderButton);
-                setTextPosition(0, getTextPosition().y);
-                expanderButton = null;
-            }
-        }
-    }
-
-    public static class TableColumn extends ButtonAdapter {
-
-        private Table table;
-        private Boolean sort;
-        private boolean resized;
-
-        public TableColumn(Table table, ElementManager screen, String UID) {
-            super(screen, UID, Vector2f.ZERO, screen.getStyle("Table#Header").getVector2f("defaultSize"), screen.getStyle("Table#Header").getVector4f("resizeBorders"), screen.getStyle("Table#Header").getString("defaultImg"));
-            init(table);
-        }
-
-        public TableColumn(Table table, ElementManager screen, String UID, Vector2f dimensions, Vector4f resizeBorders, String texturePath) {
-            super(screen, UID, Vector2f.ZERO, dimensions, resizeBorders, texturePath);
-            init(table);
-        }
-
-        @Override
-        public void controlResizeHook() {
-            // This flag is to stop sort events when actually resizing
-            resized = true;
-
-            // Stop the last column being resized past the bounds
-//            TableColumn last = table.columns.get(table.columns.size() - 1);
-//                int tw = (int) (table.getWidth() - (table.tablePadding * 2));
-//                if(last.getX() + last.getWidth() >= tw) {
-//                    System.out.println("Restricting col width of last to " + (tw-getX()) + " in (" + tw + ") of " + getWidth());
-//                    setWidth(getWidth() + ( tw - (last.getX() + last.getWidth())));
-//                }
-
-            // Adjust table columns to new size
-            table.displayHighlights();
-            table.sizeColumns();
-
-
-
-        }
-
-        @Override
-        public void onMouseLeftPressed(MouseButtonEvent evt) {
-            resized = false;
-            super.onMouseLeftPressed(evt);
-        }
-
-        @Override
-        public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
-            super.onButtonMouseLeftUp(evt, toggled);
-            if (!resized) {
-                if (sort == null) {
-                    sort = true;
-                } else {
-                    sort = !sort;
-                }
-                table.sort(this, sort);
-            }
-
-        }
-
-        private void init(Table table) {
-
-            // Load default font info
-            setFontColor(screen.getStyle("Table#Header").getColorRGBA("fontColor"));
-            setFontSize(screen.getStyle("Table#Header").getFloat("fontSize"));
-            setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("Table#Header").getString("textAlign")));
-            setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("Table#Header").getString("textVAlign")));
-            setTextWrap(LineWrapMode.valueOf(screen.getStyle("Table#Header").getString("textWrap")));
-            setTextPadding(screen.getStyle("Table#Header").getFloat("textPadding"));
-            setTextClipPadding(screen.getStyle("Table#Header").getFloat("textPadding"));
-
-            // TODO weird bug that shows when removeAllColumns() is used.
-            setButtonIcon(table.arrowSize.x, table.arrowSize.y, table.noArrowImg); // start with the blank icon
-            getButtonIcon().setX(getWidth() - getButtonIcon().getWidth() - borders.z - getTextPadding());
-
-            this.table = table;
-            if (screen.getStyle("Table#Header").getString("hoverImg") != null) {
-                setButtonHoverInfo(
-                        screen.getStyle("Table#Header").getString("hoverImg"),
-                        screen.getStyle("Table#Header").getColorRGBA("hoverColor"));
-            }
-            if (screen.getStyle("Table#Header").getString("pressedImg") != null) {
-                setButtonPressedInfo(
-                        screen.getStyle("Table#Header").getString("pressedImg"),
-                        screen.getStyle("Table#Header").getColorRGBA("pressedColor"));
-            }
-            setResizeN(false);
-            setResizeS(false);
-            setControlClippingLayer(table);
-            reconfigure();
-        }
-
-        private void reconfigure() {
-            setIsResizable(!table.columnResizeMode.equals(ColumnResizeMode.AUTO_ALL));
-            int index = table.columns.indexOf(this);
-            if (index != -1) {
-                switch (table.columnResizeMode) {
-                    case AUTO_FIRST:
-                        setResizeE(false);
-                        setResizeW(index > 0 && index < table.columns.size());
-                        break;
-                    case AUTO_LAST:
-                        setResizeE(true);
-                        setResizeW(index > 1 && index < table.columns.size());
-                        break;
-                    case NONE:
-                        setResizeE(true);
-                        setResizeW(false);
-                        break;
-                }
-            }
-        }
-    }
-
     /**
      * Creates a new instance of the Table control
      *
@@ -446,7 +186,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
                 screen.getStyle("Table").getVector4f("resizeBorders"),
                 screen.getStyle("Table").getString("defaultImg"));
     }
-
     /**
      * Creates a new instance of the Table control
      *
@@ -670,6 +409,18 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     /**
+     * Set the column resize mode.
+     *
+     * @param columnResizeMode column resize mode
+     */
+    public void setColumnResizeMode(ColumnResizeMode columnResizeMode) {
+        this.columnResizeMode = columnResizeMode;
+        reconfigureHeaders();
+        sizeColumns();
+        displayHighlights();
+    }
+
+    /**
      * Get whether headers are visible.
      *
      * @return headers visible
@@ -691,18 +442,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     /**
-     * Set the column resize mode.
-     *
-     * @param columnResizeMode column resize mode
-     */
-    public void setColumnResizeMode(ColumnResizeMode columnResizeMode) {
-        this.columnResizeMode = columnResizeMode;
-        reconfigureHeaders();
-        sizeColumns();
-        displayHighlights();
-    }
-    
-    /** 
      * Remoe all columns (also removes all rows)
      */
     public void removeAllColumns() {
@@ -711,10 +450,10 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
             removeColumn(col);
         }
     }
-    
+
     /**
      * Remove a table column
-     * 
+     *
      * @param column
      */
     public void removeColumn(TableColumn column) {
@@ -767,6 +506,15 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     /**
+     * Get the selection mode. See {@link SelectionMode}.
+     *
+     * @return selection mode.
+     */
+    public SelectionMode getSelectionMode() {
+        return selectionMode;
+    }
+
+    /**
      * Set the selection mode. See {@link SelectionMode}.
      *
      * @param selectionMode selection mode.
@@ -776,15 +524,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
         selectedRows.clear();
         selectedCells.clear();
         displayHighlights();
-    }
-
-    /**
-     * Get the selection mode. See {@link SelectionMode}.
-     *
-     * @return selection mode.
-     */
-    public SelectionMode getSelectionMode() {
-        return selectionMode;
     }
 
     /**
@@ -929,27 +668,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     /**
-     * Sets the current selected row index for single select Table
-     *
-     * @param index int
-     */
-    public void setSelectedRowIndex(Integer index) {
-        if (index < 0) {
-            index = 0;
-        } else {
-            List<TableRow> allRows = getAllRows();
-            if (index >= allRows.size()) {
-                index = allRows.size() - 1;
-            }
-        }
-        selectedRows.clear();
-        selectedRows.add(index);
-        selectedCells.clear();
-        displayHighlights();
-        onChange();
-    }
-
-    /**
      * Sets the current selected row and colum indexes
      *
      * @param index int
@@ -968,22 +686,6 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
         if (columnIndexes.length > 0) {
             selectedCells.put(rowIndex, new ArrayList(Arrays.asList(columnIndexes)));
             selectedRows.add(rowIndex);
-        }
-        displayHighlights();
-        onChange();
-    }
-
-    /**
-     * Sets the current list of selected indexes to the specified indexes
-     *
-     * @param indexes
-     */
-    public void setSelectedRowIndexes(Integer... indexes) {
-        selectedCells.clear();
-        for (int i = 0; i < indexes.length; i++) {
-            if (!selectedRows.contains(indexes[i])) {
-                selectedRows.add(indexes[i]);
-            }
         }
         displayHighlights();
         onChange();
@@ -1092,6 +794,27 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     /**
+     * Sets the current selected row index for single select Table
+     *
+     * @param index int
+     */
+    public void setSelectedRowIndex(Integer index) {
+        if (index < 0) {
+            index = 0;
+        } else {
+            List<TableRow> allRows = getAllRows();
+            if (index >= allRows.size()) {
+                index = allRows.size() - 1;
+            }
+        }
+        selectedRows.clear();
+        selectedRows.add(index);
+        selectedCells.clear();
+        displayHighlights();
+        onChange();
+    }
+
+    /**
      * Get the list of column indexes that are selected for the row.
      *
      * @return List<Integer>
@@ -1112,6 +835,22 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
      */
     public List<Integer> getSelectedRowIndexes() {
         return this.selectedRows;
+    }
+
+    /**
+     * Sets the current list of selected indexes to the specified indexes
+     *
+     * @param indexes
+     */
+    public void setSelectedRowIndexes(Integer... indexes) {
+        selectedCells.clear();
+        for (int i = 0; i < indexes.length; i++) {
+            if (!selectedRows.contains(indexes[i])) {
+                selectedRows.add(indexes[i]);
+            }
+        }
+        displayHighlights();
+        onChange();
     }
 
     /**
@@ -1874,7 +1613,7 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     private void setScrollThumb() {
-        /* All this is to update the scroll thumb to the current scroll position. 
+        /* All this is to update the scroll thumb to the current scroll position.
          Im sure something like this would be better*/
         final float trackLength = getVScrollBar().getScrollTrack().getHeight();
         float scale = (getScrollableHeight()) / (trackLength);
@@ -1893,6 +1632,255 @@ public abstract class Table extends ScrollArea implements MouseMovementListener,
     }
 
     public abstract void onChange();
+
+    public enum ColumnResizeMode {
+
+        NONE, AUTO_ALL, AUTO_FIRST, AUTO_LAST;
+    }
+
+    public enum SelectionMode {
+
+        NONE, ROW, MULTIPLE_ROWS, CELL, MULTIPLE_CELLS;
+
+        public boolean isEnabled() {
+            return !this.equals(NONE);
+        }
+
+        public boolean isSingle() {
+            return this.equals(ROW) || this.equals(CELL);
+        }
+
+        public boolean isMultiple() {
+            return this.equals(MULTIPLE_CELLS) || this.equals(MULTIPLE_ROWS);
+        }
+    }
+
+    public static class TableCell extends Element implements Comparable<TableCell> {
+
+        private Object value;
+        private String expandImg;
+        private String collapseImg;
+        private ButtonAdapter expanderButton;
+        private Vector2f cellArrowSize;
+        private String cellArrowImg;
+        private Vector4f cellArrowResizeBorders;
+
+        public TableCell(ElementManager screen, String label, Object value) {
+            super(screen, UIDUtil.getUID(), Vector2f.ZERO, screen.getStyle("Table#Cell").getVector2f("defaultSize"), screen.getStyle("Table#Cell").getVector4f("resizeBorders"), screen.getStyle("Table#Cell").getString("defaultImg"));
+            init(label, value);
+        }
+
+        public TableCell(ElementManager screen, String label, Object value, Vector2f dimensions, Vector4f resizeBorders, String texturePath) {
+            super(screen, UIDUtil.getUID(), Vector2f.ZERO, dimensions, resizeBorders, texturePath);
+            init(label, value);
+        }
+
+        public Button getExpanderButton() {
+            return expanderButton;
+        }
+
+        private void setExpanderIcon() {
+            // Decide whether to show an expander button, and how much to indent text by
+            final TableRow row = (TableRow) getElementParent();
+            if (row != null) {
+
+                final int cellIndex = new ArrayList<Element>(row.getElements()).indexOf(this);
+                TableRow r = row;
+                int depth = 0;
+                if (cellIndex == 0) {
+                    // Find the depth of row (this determines indent). Only need to do this on first row
+                    while (r.parentRow != null) {
+                        r = r.parentRow;
+                        depth++;
+                    }
+                }
+
+                // Should we actually show a button?
+                boolean shouldShow = row.table.isTree && cellIndex == 0 && !row.isLeaf();
+                if (shouldShow && expanderButton == null) {
+
+                    expanderButton = new ButtonAdapter(screen, orgPosition, cellArrowSize, cellArrowResizeBorders, cellArrowImg) {
+                        @Override
+                        public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
+                            row.setExpanded(!row.isExpanded());
+                        }
+                    };
+                    expanderButton.setX((depth * cellArrowSize.x));
+                    expanderButton.setDocking(null);
+                    expanderButton.setScaleEW(false);
+                    expanderButton.setScaleNS(false);
+                    addChild(expanderButton);
+                } else if (!shouldShow && expanderButton != null) {
+                    removeExpanderButton();
+                }
+
+                // Indent
+                setTextPosition((row.table.isTree && cellIndex == 0 ? cellArrowSize.x : 0) + (depth * cellArrowSize.x), getTextPosition().y);
+
+                // Set the icon
+                if (expanderButton != null) {
+                    expanderButton.setY((row.getHeight() - cellArrowSize.y) / 2f);
+                    if (row.isExpanded()) {
+                        expanderButton.setButtonIcon(cellArrowSize.x, cellArrowSize.y, collapseImg);
+                    } else {
+                        expanderButton.setButtonIcon(cellArrowSize.x, cellArrowSize.y, expandImg);
+                    }
+                    expanderButton.setControlClippingLayer(row.table.clipLayer);
+                }
+            }
+        }
+
+        private void init(String label, Object value) {
+
+            expandImg = screen.getStyle("Table#Cell").getString("expandImg");
+            collapseImg = screen.getStyle("Table#Cell").getString("collapseImg");
+            cellArrowSize = screen.getStyle("Table#Cell").getVector2f("arrowSize");
+            cellArrowResizeBorders = screen.getStyle("Table#Cell").getVector4f("arrowResizeBorders");
+            cellArrowImg = screen.getStyle("Table#Cell").getString("arrowImg");
+
+            // Load default font info
+            setFontColor(screen.getStyle("Table#Cell").getColorRGBA("fontColor"));
+            setFontSize(screen.getStyle("Table#Cell").getFloat("fontSize"));
+            setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("Table#Cell").getString("textAlign")));
+            setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("Table#Cell").getString("textVAlign")));
+            setTextWrap(LineWrapMode.valueOf(screen.getStyle("Table#Cell").getString("textWrap")));
+            setTextPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
+            setTextClipPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
+
+            setText(label);
+            setIgnoreMouse(true);
+            this.value = value;
+            setDocking(null);
+            setScaleEW(false);
+            setScaleNS(false);
+        }
+
+        @Override
+        public int compareTo(TableCell o) {
+            if (value instanceof Comparable && o.value instanceof Comparable) {
+                return ((Comparable) value).compareTo((Comparable) o.value);
+            }
+            return toString().compareTo(o.toString());
+        }
+
+        private void removeExpanderButton() {
+            if (expanderButton != null) {
+                removeChild(expanderButton);
+                setTextPosition(0, getTextPosition().y);
+                expanderButton = null;
+            }
+        }
+    }
+
+    public static class TableColumn extends ButtonAdapter {
+
+        private Table table;
+        private Boolean sort;
+        private boolean resized;
+
+        public TableColumn(Table table, ElementManager screen, String UID) {
+            super(screen, UID, Vector2f.ZERO, screen.getStyle("Table#Header").getVector2f("defaultSize"), screen.getStyle("Table#Header").getVector4f("resizeBorders"), screen.getStyle("Table#Header").getString("defaultImg"));
+            init(table);
+        }
+
+        public TableColumn(Table table, ElementManager screen, String UID, Vector2f dimensions, Vector4f resizeBorders, String texturePath) {
+            super(screen, UID, Vector2f.ZERO, dimensions, resizeBorders, texturePath);
+            init(table);
+        }
+
+        @Override
+        public void controlResizeHook() {
+            // This flag is to stop sort events when actually resizing
+            resized = true;
+
+            // Stop the last column being resized past the bounds
+//            TableColumn last = table.columns.get(table.columns.size() - 1);
+//                int tw = (int) (table.getWidth() - (table.tablePadding * 2));
+//                if(last.getX() + last.getWidth() >= tw) {
+//                    System.out.println("Restricting col width of last to " + (tw-getX()) + " in (" + tw + ") of " + getWidth());
+//                    setWidth(getWidth() + ( tw - (last.getX() + last.getWidth())));
+//                }
+
+            // Adjust table columns to new size
+            table.displayHighlights();
+            table.sizeColumns();
+
+
+        }
+
+        @Override
+        public void onMouseLeftPressed(MouseButtonEvent evt) {
+            resized = false;
+            super.onMouseLeftPressed(evt);
+        }
+
+        @Override
+        public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
+            super.onButtonMouseLeftUp(evt, toggled);
+            if (!resized) {
+                if (sort == null) {
+                    sort = true;
+                } else {
+                    sort = !sort;
+                }
+                table.sort(this, sort);
+            }
+
+        }
+
+        private void init(Table table) {
+
+            // Load default font info
+            setFontColor(screen.getStyle("Table#Header").getColorRGBA("fontColor"));
+            setFontSize(screen.getStyle("Table#Header").getFloat("fontSize"));
+            setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("Table#Header").getString("textAlign")));
+            setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("Table#Header").getString("textVAlign")));
+            setTextWrap(LineWrapMode.valueOf(screen.getStyle("Table#Header").getString("textWrap")));
+            setTextPadding(screen.getStyle("Table#Header").getFloat("textPadding"));
+            setTextClipPadding(screen.getStyle("Table#Header").getFloat("textPadding"));
+
+            // TODO weird bug that shows when removeAllColumns() is used.
+            setButtonIcon(table.arrowSize.x, table.arrowSize.y, table.noArrowImg); // start with the blank icon
+            getButtonIcon().setX(getWidth() - getButtonIcon().getWidth() - borders.z - getTextPadding());
+
+            this.table = table;
+            if (screen.getStyle("Table#Header").getString("hoverImg") != null) {
+                setButtonHoverInfo(
+                        screen.getStyle("Table#Header").getString("hoverImg"),
+                        screen.getStyle("Table#Header").getColorRGBA("hoverColor"));
+            }
+            if (screen.getStyle("Table#Header").getString("pressedImg") != null) {
+                setButtonPressedInfo(
+                        screen.getStyle("Table#Header").getString("pressedImg"),
+                        screen.getStyle("Table#Header").getColorRGBA("pressedColor"));
+            }
+            setResizeN(false);
+            setResizeS(false);
+            setControlClippingLayer(table);
+            reconfigure();
+        }
+
+        private void reconfigure() {
+            setIsResizable(!table.columnResizeMode.equals(ColumnResizeMode.AUTO_ALL));
+            int index = table.columns.indexOf(this);
+            if (index != -1) {
+                switch (table.columnResizeMode) {
+                    case AUTO_FIRST:
+                        setResizeE(false);
+                        setResizeW(index > 0 && index < table.columns.size());
+                        break;
+                    case AUTO_LAST:
+                        setResizeE(true);
+                        setResizeW(index > 1 && index < table.columns.size());
+                        break;
+                    case NONE:
+                        setResizeE(true);
+                        setResizeW(false);
+                        break;
+                }
+            }
+        }
+    }
 
     public static class TableRow extends Element {
 

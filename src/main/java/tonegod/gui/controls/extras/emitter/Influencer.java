@@ -15,7 +15,7 @@ public interface Influencer {
 	
 	public void initialize(ElementParticle particle);
 	
-	public void setIsEnabled(boolean isEnabled);
-	
 	public boolean getIsEnabled();
+
+	public void setIsEnabled(boolean isEnabled);
 }
